@@ -11,6 +11,7 @@
 #include "log.h"
 
 #include <string.h>
+#include <sys/stat.h>
 
 struct LinkedList *list_directory(const char *dir_path, enum wc_error *error) {
     log_debug("list_directory %s", dir_path);
@@ -24,8 +25,8 @@ struct LinkedList *list_directory(const char *dir_path, enum wc_error *error) {
         while ((dir = readdir(d)) != NULL) {
             log_trace("list_directory [dir_path=%s] found %s", "ss", dir->d_name);
             if (strncmp(dir->d_name, "..", 2) != 0 && strncmp(dir->d_name, ".", 1) != 0) {
-                char *file_name = malloc(sizeof(char) * POSIX_MAX_FILE_NAME);
-                strncpy(file_name, dir->d_name, POSIX_MAX_FILE_NAME);
+                char *file_name = malloc(sizeof(char) * POSIX_MAX_FILE_NAME + strnlen(dir_path, POSIX_MAX_PATH_LEN));
+                sprintf(file_name, "%s/%s", dir_path, dir->d_name);
                 ll_add_last(file_list, file_name);
             }
         }
@@ -35,4 +36,14 @@ struct LinkedList *list_directory(const char *dir_path, enum wc_error *error) {
         *error = IO_ERROR;
     }
     return file_list;
+}
+
+size_t file_size(const char *file_path, enum wc_error *error) {
+    struct stat st;
+    int res = stat(file_path, &st);
+    if (res != 0) {
+        log_error("file_size [file_path=%s] failed", file_path);
+        *error = IO_ERROR;
+    }
+    return (size_t) st.st_size;
 }

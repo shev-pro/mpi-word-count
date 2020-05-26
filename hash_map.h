@@ -19,7 +19,7 @@ struct Table {
     struct node **list;
 };
 
-struct Table *ht_create_table(int size) {
+static struct Table *ht_create_table(int size) {
     struct Table *t = (struct Table *) malloc(sizeof(struct Table));
     t->size = size;
     t->list = (struct node **) malloc(sizeof(struct node *) * size);
@@ -29,13 +29,13 @@ struct Table *ht_create_table(int size) {
     return t;
 }
 
-int ht_hash_code(struct Table *t, int key) {
+static int ht_hash_code(struct Table *t, int key) {
     if (key < 0)
         return -(key % t->size);
     return key % t->size;
 }
 
-void ht_insert(struct Table *t, int key, void *val) {
+static void ht_insert(struct Table *t, int key, void *val) {
     int pos = ht_hash_code(t, key);
     struct node *list = t->list[pos];
     struct node *newNode = (struct node *) malloc(sizeof(struct node));
@@ -53,7 +53,7 @@ void ht_insert(struct Table *t, int key, void *val) {
     t->list[pos] = newNode;
 }
 
-void *ht_lookup(struct Table *t, int key) {
+static void *ht_lookup(struct Table *t, int key) {
     int pos = ht_hash_code(t, key);
     struct node *list = t->list[pos];
     struct node *temp = list;

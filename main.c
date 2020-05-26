@@ -1,9 +1,12 @@
 #include <stdio.h>
+#include <string.h>
 #include "fs_utils.h"
 #include "hash_map.h"
 #include "linked_list.h"
 #include "errors.h"
 #include "log.h"
+#include "wc_utils.h"
+
 
 int main() {
     log_set_level(LOG_TRACE);
@@ -21,7 +24,10 @@ int main() {
     }
 
     log_debug("found files %d", ll_size(files));
-    ll_print(files);
+
+    split_files_equally(files, 4, &status);
+//    ll_print(files);
+//    printf("%d\n", (int) file_size("/Users/sergio/ClionProjects/mpi_word_count/test_dir/t1.txt", &status));
 //    char **files;
 //    size_t size = 0;
 //    list_directory(".", files, &size);

@@ -9,5 +9,6 @@
 #include "errors.h"
 
 struct LinkedList *list_directory(const char *dir_path, enum wc_error *error);
+size_t file_size(const char *file_path, enum wc_error *error);
 
 #endif //MPI_WORD_COUNT_FS_UTILS_H

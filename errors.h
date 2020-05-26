@@ -8,7 +8,5 @@ enum wc_error {
     NO_ERROR = 0,
     IO_ERROR = 1,
     GENERIC_ERROR = 10,
-    hearts = 20,
-    spades = 3,
 };
 #endif //MPI_WORD_COUNT_ERRORS_H
