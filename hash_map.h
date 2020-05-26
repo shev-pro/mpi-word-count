@@ -66,4 +66,8 @@ static void *ht_lookup(struct Table *t, int key) {
     return NULL;
 }
 
+void ht_free(struct Table *t) {
+    free(t);
+}
+
 #endif //MPI_WORD_COUNT_HASH_MAP_H

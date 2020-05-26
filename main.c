@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "fs_utils.h"
-#include "hash_map.h"
 #include "linked_list.h"
 #include "errors.h"
 #include "log.h"
@@ -11,9 +10,6 @@
 int main() {
     log_set_level(LOG_TRACE);
     log_info("MPi Word Count startup");
-
-//    struct Table *directory_list = ht_create_table(500);
-
 
     enum wc_error status = NO_ERROR;
     char path[] = "/Users/sergio/ClionProjects/mpi_word_count/test_dir";
@@ -25,11 +21,6 @@ int main() {
 
     log_debug("found files %d", ll_size(files));
 
-    split_files_equally(files, 4, &status);
-//    ll_print(files);
-//    printf("%d\n", (int) file_size("/Users/sergio/ClionProjects/mpi_word_count/test_dir/t1.txt", &status));
-//    char **files;
-//    size_t size = 0;
-//    list_directory(".", files, &size);
+    struct LinkedList **splitted_file_lists = split_files_equally(files, 4, &status);
     return 0;
 }
