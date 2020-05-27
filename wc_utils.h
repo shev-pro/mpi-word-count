@@ -22,6 +22,7 @@ struct WordFreq{
 struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned int groups, enum wc_error *status);
 
 struct WordFreq *word_frequencies(const char *filepath, enum wc_error *status);
+enum wc_error dump(struct WordFreq *wordFreq, char *serialized, long *size);
 
 void print_frequencies(struct WordFreq *frequncies);
 

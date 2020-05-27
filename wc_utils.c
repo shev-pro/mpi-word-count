@@ -109,6 +109,13 @@ void print_frequencies(struct WordFreq *frequncies) {
     log_debug("Total words: %li", words);
 }
 
+enum wc_error dump(struct WordFreq *frequncies, char *serialized, long *size) {
+    struct LinkedList *word_list = frequncies->word_list;
+    struct HashTable *word_freq = frequncies->word_frequencies;
+
+
+}
+
 struct WordFreq *word_frequencies(const char *filepath, enum wc_error *status) {
     log_debug("word_frequencies [filepath=%s]", filepath);
 
