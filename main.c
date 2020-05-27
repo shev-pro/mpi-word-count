@@ -7,11 +7,14 @@
 #include "log.h"
 #include "wc_utils.h"
 #include "hash_map.h"
+#include "wc_constants.h"
+#include "wc_mpi_helpers.h"
 #include <mpi.h>
+#include <limits.h>
 
 #define IS_MASTER == 0
 #define IS_SLAVE > 0
-#define REGULAR_WORK_TAG 1
+
 
 int main(int argc, char *argv[]) {
     log_set_level(LOG_TRACE);
@@ -33,7 +36,7 @@ int main(int argc, char *argv[]) {
         log_fatal("listing directory failed error_code=%d", wc_status);
         return -1;
     }
-    char buffer[4096];
+    char buf_path[PATH_MAX];
     log_debug("found files %d", ll_size(files));
     if (rank IS_MASTER) {
         log_debug("Master started");
@@ -42,18 +45,25 @@ int main(int argc, char *argv[]) {
             log_fatal("filelist splitting failed error_code=%d", wc_status);
             return -2;
         }
-        for (int i = 1; i < numtasks; i++) {
-            size_t buff_size;
-            char *joined_str = ll_join(splitted_file_lists[i], '|', &buff_size);
-            MPI_Send(joined_str, (int) buff_size, MPI_CHAR, i, REGULAR_WORK_TAG, MPI_COMM_WORLD);
-        }
+        send_workload_to_slaves(splitted_file_lists, numtasks);
     }
     if (rank IS_SLAVE) {
         log_debug("Slave started");
-
-        MPI_Recv(&buffer, 4096, MPI_CHAR, MPI_ANY_SOURCE, REGULAR_WORK_TAG, MPI_COMM_WORLD, &status);
-        printf("Buf %s", buffer);
-//        struct WordFreq *result = word_frequencies("/Users/sergio/ClionProjects/mpi_word_count/test_dir/t1.txt",
+        struct LinkedList *local_file_list = ll_construct_linked_list();
+        int finished = 0;
+        while (finished == 0) {
+            MPI_Recv(&buf_path, PATH_MAX, MPI_CHAR, MPI_ANY_SOURCE, REGULAR_WORK_TAG, MPI_COMM_WORLD, &status);
+            if (strncmp(PATH_RECV_FINISH, buf_path, strlen(PATH_RECV_FINISH)) == 0) {
+                finished = 1;
+            } else {
+                char *rec_path = calloc(strnlen(buf_path, PATH_MAX) + 1, sizeof(char));
+                strncpy(rec_path, buf_path, PATH_MAX);
+                ll_add_last(local_file_list, rec_path);
+            }
+        }
+        printf("====\n");
+        ll_print(local_file_list);
+        //        struct WordFreq *result = word_frequencies("/Users/sergio/ClionProjects/mpi_word_count/test_dir/t1.txt",
 //                                                   &wc_status);
 
     }
