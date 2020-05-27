@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <memory.h>
 
 struct Node {
     void *data;
@@ -258,6 +259,52 @@ static struct Node *ll_next(struct LinkedList *list, struct Node *current) {
 
 static size_t ll_size(struct LinkedList *list) {
     return list->_size;
+}
+
+static char *ll_join(struct LinkedList *list, char delimiter, size_t *size) {
+    struct Node *current = ll_next(list, NULL);
+    long overall_len = 0;
+
+    while (NULL != current) {
+        overall_len = overall_len + strlen(current->data);
+        current = ll_next(list, current);
+    }
+    size_t buffer_size = overall_len + ll_size(list) + 1;
+    char *res = calloc(buffer_size, sizeof(char));
+    char *respos = res;
+    current = ll_next(list, NULL);
+    while (NULL != current) {
+        int src_len = (int) strlen(current->data);
+        strncpy(respos, current->data, src_len);
+        respos = respos + src_len;
+        *respos = delimiter;
+        respos++;
+        current = ll_next(list, current);
+    }
+    respos[-1] = '\0';
+    *size = (int) buffer_size;
+    return res;
+}
+
+static int ll_split(struct LinkedList *list, const char *src, char delimiter) {
+    printf("To split %s\n", src);
+    const char *start = src;
+    char *finish = (char *) start;
+    while (*start != '\0') {
+        if (*finish == delimiter || *finish == '\0') {
+            int buf_size = (int) (finish - start);
+            char *item = calloc(buf_size + 1, sizeof(char));
+            strncpy(item, start, buf_size);
+            printf("Parsed item is %s\n", item);
+            start = finish + 1;
+            finish = start;
+            ll_add_last(list, item);
+        } else {
+            finish = finish + 1;
+        }
+    }
+
+    return (int) ll_size(list);
 }
 
 #endif //MPI_WORD_COUNT_LINKED_LIST_H
