@@ -99,10 +99,14 @@ void print_frequencies(struct WordFreq *frequncies) {
     struct HashTable *word_freq = frequncies->word_frequencies;
 
     struct Node *current = ll_next(word_list, NULL);
+    long words = 0;
     while (NULL != current) {
-        log_debug("%d => %s", *(int *) ht_lookup_str(word_freq, (char *) current->data), (char *) current->data);
+        int word_count = *(int *) ht_lookup_str(word_freq, (char *) current->data);
+        log_debug("%d => %s", word_count, (char *) current->data);
+        words = word_count + words;
         current = ll_next(word_list, current);
     }
+    log_debug("Total words: %li", words);
 }
 
 struct WordFreq *word_frequencies(const char *filepath, enum wc_error *status) {
@@ -126,19 +130,21 @@ struct WordFreq *word_frequencies(const char *filepath, enum wc_error *status) {
     char buf[MAX_WORD_SIZE];
     int buf_pos = 0;
     while ((c = (char) fgetc(fp)) != EOF) {
-        if (c == ' ' || c == '\n') {
+        if (c == ' ' || c == '\n' || c == '\t') {
             buf[buf_pos] = '\0';
             buf_pos = 0;
-            int *count = ht_lookup_str(frequencies, buf);
-            if (NULL == count) { // First time seeing this word
-                count = calloc(1, sizeof(int));
-                char *word = calloc(strlen(buf) + 1, sizeof(char));
-                strncpy(word, buf, MAX_WORD_SIZE);
-                *count = 1;
-                ht_insert_str(frequencies, buf, count);
-                ll_add_last(word_list, word);
-            } else {
-                *count = *count + 1;
+            if (strlen(buf) > 0) {
+                int *count = ht_lookup_str(frequencies, buf);
+                if (NULL == count) { // First time seeing this word
+                    count = calloc(1, sizeof(int));
+                    char *word = calloc(strlen(buf) + 1, sizeof(char));
+                    strncpy(word, buf, MAX_WORD_SIZE);
+                    *count = 1;
+                    ht_insert_str(frequencies, buf, count);
+                    ll_add_last(word_list, word);
+                } else {
+                    *count = *count + 1;
+                }
             }
         } else {
             buf[buf_pos] = c;

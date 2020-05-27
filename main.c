@@ -22,13 +22,13 @@ int main() {
 
     log_debug("found files %d", ll_size(files));
 
-    struct LinkedList **splitted_file_lists = split_files_equally(files, 4, &status);
+    struct LinkedList **splitted_file_lists = split_files_equally(files, 10, &status);
     if (NO_ERROR != status) {
         log_fatal("filelist splitting failed error_code=%d", status);
         return -2;
     }
 
-    struct WordFreq *result = word_frequencies("/Users/sergio/ClionProjects/mpi_word_count/test_dir/dante.txt", &status);
+    struct WordFreq *result = word_frequencies("/Users/sergio/ClionProjects/mpi_word_count/test_dir/t1.txt", &status);
     print_frequencies(result);
 
     return 0;
