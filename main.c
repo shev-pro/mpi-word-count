@@ -5,6 +5,7 @@
 #include "errors.h"
 #include "log.h"
 #include "wc_utils.h"
+#include "hash_map.h"
 
 
 int main() {
@@ -27,6 +28,8 @@ int main() {
         return -2;
     }
 
+    struct WordFreq *result = word_frequencies("/Users/sergio/ClionProjects/mpi_word_count/test_dir/dante.txt", &status);
+    print_frequencies(result);
 
     return 0;
 }

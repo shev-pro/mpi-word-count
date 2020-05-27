@@ -40,16 +40,16 @@ static struct LinkedList *ll_construct_linked_list() {
  * Locates a Node within the LinkedList based on the index.
  */
 static struct Node *ll_find(struct LinkedList *list, unsigned int index) {
-    if (index > list->_size)
+    if (index > list->_size) {
         fprintf(stderr, "%s%d%s%d%c\n",
                 "Error: Index Out of Bounds. Index was '",
                 index, "\' but size is ", (int) list->_size, '.');
-    else if (list->_size > 0)
-        if (index == 0)
+    } else if (list->_size > 0) {
+        if (index == 0) {
             return list->root;
-        else if (index == list->_size - 1)
+        } else if (index == list->_size - 1) {
             return list->tail;
-        else {
+        } else {
             struct Node *temp;
 
             if ((double) index / list->_size > 0.5) {
@@ -66,7 +66,7 @@ static struct Node *ll_find(struct LinkedList *list, unsigned int index) {
 
             return temp;
         }
-
+    }
     return NULL;
 }
 
@@ -247,6 +247,13 @@ static struct LinkedList *ll_clone(struct LinkedList *list) {
     }
 
     return copy;
+}
+
+static struct Node *ll_next(struct LinkedList *list, struct Node *current) {
+    if (NULL == current) {
+        return list->root;
+    }
+    return current->next;
 }
 
 static size_t ll_size(struct LinkedList *list) {

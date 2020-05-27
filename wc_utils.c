@@ -9,6 +9,7 @@
 #include "hash_map.h"
 #include "fs_utils.h"
 #include "log.h"
+#include "wc_constants.h"
 
 int int_compare(const void *a, const void *b) {
     int int_a = *((int *) a);
@@ -29,8 +30,12 @@ int find_min_index(const int *in_arr, int count) {
     return min_pos;
 }
 
-/*
- * Look into header for description
+/**
+ * Will group file_list into number of groups using ApproxLoadDec strategy with T < 3/4(T*) guarantee
+ * @param file_list LinkedList of files (contains char*)
+ * @param groups    Groups file_list will be devided to
+ * @param status    Overall status
+ * @return          Array of LinkedLists long groups
  */
 struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned int groups, enum wc_error *status) {
     log_debug("split_files_equally [file_list_count=%d, groups=%d] starting", ll_size(file_list), groups);
@@ -51,8 +56,7 @@ struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned i
         }
 
     }
-
-    struct Table *file_sizes_hash_table = ht_create_table(
+    struct HashTable *file_sizes_hash_table = ht_create_table(
             (int) (ll_size(file_list) * 5)); // 5 magic number to be 20% full
     if (NULL == file_sizes_hash_table) {
         free(splitted_files);
@@ -65,7 +69,7 @@ struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned i
                                                       (unsigned int) i)->data; // change ll_find with sthg performant
         int size = (int) file_size(filename, status);
         all_files_sizes[i] = size;
-        ht_insert(file_sizes_hash_table, size, (void *) filename);
+        ht_insert_int(file_sizes_hash_table, size, (void *) filename);
     }
 
     qsort(all_files_sizes, ll_size(file_list) + 1, sizeof(int), int_compare);
@@ -85,4 +89,64 @@ struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned i
     free(all_files_sizes);
 
     return splitted_files;
+}
+
+void print_frequencies(struct WordFreq *frequncies) {
+    struct LinkedList *word_list = frequncies->word_list;
+    struct HashTable *word_freq = frequncies->word_frequencies;
+
+    struct Node *current = ll_next(word_list, NULL);
+    while (NULL != current) {
+        log_debug("%d => %s", *(int *) ht_lookup_str(word_freq, (char *) current->data), (char *) current->data);
+        current = ll_next(word_list, current);
+    }
+}
+
+struct WordFreq *word_frequencies(const char *filepath, enum wc_error *status) {
+    log_debug("word_frequencies [filepath=%s]", filepath);
+
+    FILE *fp = fopen(filepath, "r");
+    if (fp == NULL) {
+        *status = IO_ERROR;
+        return NULL;
+    }
+
+    struct LinkedList *word_list = ll_construct_linked_list();
+    struct HashTable *frequencies = ht_create_table(500); //todo define this value using something better
+
+    if (NULL == word_list || NULL == frequencies) {
+        *status = OOM_ERROR;
+        return NULL;
+    }
+
+    char c;
+    char buf[MAX_WORD_SIZE];
+    int buf_pos = 0;
+    while ((c = (char) fgetc(fp)) != EOF) {
+        if (c == ' ' || c == '\n') {
+            buf[buf_pos] = '\0';
+            buf_pos = 0;
+            int *count = ht_lookup_str(frequencies, buf);
+            if (NULL == count) { // First time seeing this word
+                count = calloc(1, sizeof(int));
+                char *word = calloc(strlen(buf) + 1, sizeof(char));
+                strncpy(word, buf, MAX_WORD_SIZE);
+                *count = 1;
+                ht_insert_str(frequencies, buf, count);
+                ll_add_last(word_list, word);
+            } else {
+                *count = *count + 1;
+            }
+        } else {
+            buf[buf_pos] = c;
+            buf_pos++;
+        }
+    }
+    fclose(fp);
+
+    struct WordFreq *result = calloc(1, sizeof(struct WordFreq));
+    result->word_list = word_list;
+    result->word_frequencies = frequencies;
+
+    return result;
 }

@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "hash_map_crc.h"
 
 struct node {
     int key;
@@ -14,13 +15,13 @@ struct node {
     struct node *next;
 };
 
-struct Table {
+struct HashTable {
     int size;
     struct node **list;
 };
 
-static struct Table *ht_create_table(int size) {
-    struct Table *t = (struct Table *) malloc(sizeof(struct Table));
+static struct HashTable *ht_create_table(int size) {
+    struct HashTable *t = (struct HashTable *) malloc(sizeof(struct HashTable));
     if (NULL == t)
         return NULL;
     t->size = size;
@@ -31,13 +32,14 @@ static struct Table *ht_create_table(int size) {
     return t;
 }
 
-static int ht_hash_code(struct Table *t, int key) {
+static int ht_hash_code(struct HashTable *t, int key) {
     if (key < 0)
         return -(key % t->size);
     return key % t->size;
 }
 
-static void ht_insert(struct Table *t, int key, void *val) {
+
+static void ht_insert_int(struct HashTable *t, int key, void *val) {
     int pos = ht_hash_code(t, key);
     struct node *list = t->list[pos];
     struct node *newNode = (struct node *) malloc(sizeof(struct node));
@@ -55,7 +57,12 @@ static void ht_insert(struct Table *t, int key, void *val) {
     t->list[pos] = newNode;
 }
 
-static void *ht_lookup(struct Table *t, int key) {
+static void ht_insert_str(struct HashTable *t, const char *key, void *val) {
+    int int_key = hashmap_hash_int(key);
+    ht_insert_int(t, int_key, val);
+}
+
+static void *ht_lookup(struct HashTable *t, int key) {
     int pos = ht_hash_code(t, key);
     struct node *list = t->list[pos];
     struct node *temp = list;
@@ -68,7 +75,13 @@ static void *ht_lookup(struct Table *t, int key) {
     return NULL;
 }
 
-void ht_free(struct Table *t) {
+static void *ht_lookup_str(struct HashTable *t, const char *key) {
+    int int_key = hashmap_hash_int(key);
+//    printf("Key %d\n", int_key);
+    return ht_lookup(t, int_key);
+}
+
+static void ht_free(struct HashTable *t) {
     free(t);
 }
 
