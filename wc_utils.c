@@ -20,7 +20,7 @@ int int_compare(const void *a, const void *b) {
     else return 1;
 }
 
-int find_min_index(const int *in_arr, int count) {
+int find_min_index(const long *in_arr, int count) {
     int min_pos = 0;
     for (int i = 0; i < count; i++) {
         if (in_arr[min_pos] > in_arr[i]) {
@@ -40,7 +40,7 @@ int find_min_index(const int *in_arr, int count) {
 struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned int groups, enum wc_error *status) {
     log_debug("split_files_equally [file_list_count=%d, groups=%d] starting", ll_size(file_list), groups);
 
-    int *workload_sep_size = calloc(groups, sizeof(int));
+    long *workload_sep_size = calloc(groups, sizeof(long));
     int *all_files_sizes = calloc(ll_size(file_list), sizeof(int));
     struct LinkedList **splitted_files = malloc(sizeof(struct LinkedList *) * groups);
     if (NULL == splitted_files) {
@@ -56,6 +56,7 @@ struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned i
         }
 
     }
+
     struct HashTable *file_sizes_hash_table = ht_create_table(
             (int) (ll_size(file_list) * 5)); // 5 magic number to be 20% full
     if (NULL == file_sizes_hash_table) {
@@ -71,12 +72,14 @@ struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned i
         all_files_sizes[i] = size;
         ht_insert_int(file_sizes_hash_table, size, (void *) filename);
     }
+    qsort(all_files_sizes, ll_size(file_list), sizeof(int), int_compare);
 
-    qsort(all_files_sizes, ll_size(file_list) + 1, sizeof(int), int_compare);
-    for (int i = (int) ll_size(file_list); i > 0; i--) {
+    for (int i = ((int) ll_size(file_list) - 1); i > 0; i--) {
         int min_index = find_min_index(workload_sep_size, groups);
         workload_sep_size[min_index] = workload_sep_size[min_index] + all_files_sizes[i];
-        ll_add_last(splitted_files[min_index], ht_lookup(file_sizes_hash_table, all_files_sizes[i]));
+        char *filename = ht_lookup(file_sizes_hash_table, all_files_sizes[i]);
+
+        ll_add_last(splitted_files[min_index], filename);
     }
 
     for (int i = 0; i < groups; i++) {
