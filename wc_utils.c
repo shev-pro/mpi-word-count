@@ -38,15 +38,31 @@ struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned i
     int *workload_sep_size = calloc(groups, sizeof(int));
     int *all_files_sizes = calloc(ll_size(file_list), sizeof(int));
     struct LinkedList **splitted_files = malloc(sizeof(struct LinkedList *) * groups);
+    if (NULL == splitted_files) {
+        *status = OOM_ERROR;
+        return NULL;
+    }
 
     for (int i = 0; i < groups; i++) {
         splitted_files[i] = ll_construct_linked_list();
+        if (NULL == splitted_files[i]) {
+            *status = OOM_ERROR;
+            return NULL;
+        }
+
     }
 
-    struct Table *file_sizes_hash_table = ht_create_table((int) (ll_size(file_list) * 5)); // 5 magic number to be 20% full
+    struct Table *file_sizes_hash_table = ht_create_table(
+            (int) (ll_size(file_list) * 5)); // 5 magic number to be 20% full
+    if (NULL == file_sizes_hash_table) {
+        free(splitted_files);
+        *status = OOM_ERROR;
+        return NULL;
+    }
 
     for (int i = 0; i < ll_size(file_list); i++) {
-        const char *filename = (const char *) ll_find(file_list, (unsigned int) i)->data;
+        const char *filename = (const char *) ll_find(file_list,
+                                                      (unsigned int) i)->data; // change ll_find with sthg performant
         int size = (int) file_size(filename, status);
         all_files_sizes[i] = size;
         ht_insert(file_sizes_hash_table, size, (void *) filename);

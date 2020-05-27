@@ -21,6 +21,8 @@ struct Table {
 
 static struct Table *ht_create_table(int size) {
     struct Table *t = (struct Table *) malloc(sizeof(struct Table));
+    if (NULL == t)
+        return NULL;
     t->size = size;
     t->list = (struct node **) malloc(sizeof(struct node *) * size);
     int i;

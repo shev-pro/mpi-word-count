@@ -28,6 +28,8 @@ static struct Node *ll_construct_node(void *data) {
 
 static struct LinkedList *ll_construct_linked_list() {
     struct LinkedList *temp = malloc(sizeof(struct LinkedList));
+    if (NULL == temp)
+        return NULL;
     temp->root = NULL;
     temp->tail = NULL;
     temp->_size = 0;

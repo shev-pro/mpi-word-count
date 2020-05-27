@@ -14,7 +14,7 @@ int main() {
     enum wc_error status = NO_ERROR;
     char path[] = "/Users/sergio/ClionProjects/mpi_word_count/test_dir";
     struct LinkedList *files = list_directory(path, &status);
-    if (status != NO_ERROR) {
+    if (NO_ERROR != status) {
         log_fatal("listing directory failed error_code=%d", status);
         return -1;
     }
@@ -22,5 +22,11 @@ int main() {
     log_debug("found files %d", ll_size(files));
 
     struct LinkedList **splitted_file_lists = split_files_equally(files, 4, &status);
+    if (NO_ERROR != status) {
+        log_fatal("filelist splitting failed error_code=%d", status);
+        return -2;
+    }
+
+
     return 0;
 }
