@@ -9,8 +9,10 @@
 #include "hash_map.h"
 #include "wc_constants.h"
 #include "wc_mpi_helpers.h"
+#include "wc_core.h"
 #include <mpi.h>
 #include <limits.h>
+#include <stdbool.h>
 
 #define IS_MASTER == 0
 #define IS_SLAVE > 0
@@ -30,43 +32,50 @@ int main(int argc, char *argv[]) {
 
     enum wc_error wc_status = NO_ERROR;
 
-    char path[] = "/Users/sergio/ClionProjects/mpi_word_count/test_dir";
-    struct LinkedList *files = list_directory(path, &wc_status);
-    if (NO_ERROR != wc_status) {
-        log_fatal("listing directory failed error_code=%d", wc_status);
-        return -1;
-    }
-    char buf_path[PATH_MAX];
-    log_debug("found files %d", ll_size(files));
+
     if (rank IS_MASTER) {
         log_debug("Master started");
+        char path[] = "/Users/sergio/ClionProjects/mpi_word_count/test_dir";
+        struct LinkedList *files = list_directory(path, &wc_status);
+        if (NO_ERROR != wc_status) {
+            log_fatal("listing directory failed error_code=%d", wc_status);
+            return -1;
+        }
+
+        log_debug("found files %d", ll_size(files));
+
         struct LinkedList **splitted_file_lists = split_files_equally(files, numtasks, &wc_status);
         if (NO_ERROR != wc_status) {
             log_fatal("filelist splitting failed error_code=%d", wc_status);
             return -2;
         }
         send_workload_to_slaves(splitted_file_lists, numtasks);
+        struct LinkedList *local_file_list = splitted_file_lists[0];
+        worker_process_files(local_file_list, rank, &wc_status);
     }
+
     if (rank IS_SLAVE) {
         log_debug("Slave started");
+        char buf_path[PATH_MAX];
         struct LinkedList *local_file_list = ll_construct_linked_list();
-        int finished = 0;
-        while (finished == 0) {
-            MPI_Recv(&buf_path, PATH_MAX, MPI_CHAR, MPI_ANY_SOURCE, REGULAR_WORK_TAG, MPI_COMM_WORLD, &status);
-            if (strncmp(PATH_RECV_FINISH, buf_path, strlen(PATH_RECV_FINISH)) == 0) {
-                finished = 1;
-            } else {
-                char *rec_path = calloc(strnlen(buf_path, PATH_MAX) + 1, sizeof(char));
-                strncpy(rec_path, buf_path, PATH_MAX);
-                ll_add_last(local_file_list, rec_path);
-            }
-        }
-        printf("====\n");
-        ll_print(local_file_list);
-        //        struct WordFreq *result = word_frequencies("/Users/sergio/ClionProjects/mpi_word_count/test_dir/t1.txt",
-//                                                   &wc_status);
+        bool finished = false;
+        while (finished == false) {
+            MPI_Recv(&buf_path, PATH_MAX, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            log_debug("Received %s tag %d", buf_path, status.MPI_TAG);
 
+            if (status.MPI_TAG == FILE_DISTR_TAG_FINAL) {
+                finished = true;
+            }
+            int received_path_len = (int) (strnlen(buf_path, PATH_MAX) + 1);
+            char *rec_path = calloc((size_t) received_path_len, sizeof(char));
+            strcpy(rec_path, buf_path);
+            memset(buf_path, 0x00, PATH_MAX);
+            ll_add_last(local_file_list, rec_path);
+        }
+
+        worker_process_files(local_file_list, rank, &wc_status);
     }
+
 
     MPI_Finalize();
     return 0;

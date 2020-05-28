@@ -5,9 +5,10 @@
 #ifndef MPI_WORD_COUNT_WC_UTILS_H
 #define MPI_WORD_COUNT_WC_UTILS_H
 
+#include <stdbool.h>
 #include "errors.h"
 
-struct WordFreq{
+struct WordFreq {
     struct LinkedList *word_list;
     struct HashTable *word_frequencies;
 };
@@ -21,9 +22,10 @@ struct WordFreq{
  */
 struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned int groups, enum wc_error *status);
 
-struct WordFreq *word_frequencies(const char *filepath, enum wc_error *status);
+struct WordFreq *word_frequencies(struct WordFreq *update_freq, const char *filepath, enum wc_error *status);
+
 enum wc_error dump(struct WordFreq *wordFreq, char *serialized, long *size);
 
-void print_frequencies(struct WordFreq *frequncies);
+void print_frequencies(struct WordFreq *frequncies, bool only_total);
 
 #endif //MPI_WORD_COUNT_WC_UTILS_H

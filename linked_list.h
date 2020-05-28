@@ -287,7 +287,6 @@ static char *ll_join(struct LinkedList *list, char delimiter, size_t *size) {
 }
 
 static int ll_split(struct LinkedList *list, const char *src, char delimiter) {
-    printf("To split %s\n", src);
     const char *start = src;
     char *finish = (char *) start;
     while (*start != '\0') {
@@ -297,7 +296,7 @@ static int ll_split(struct LinkedList *list, const char *src, char delimiter) {
             strncpy(item, start, buf_size);
             printf("Parsed item is %s\n", item);
             start = finish + 1;
-            finish = start;
+            finish = (char *) start;
             ll_add_last(list, item);
         } else {
             finish = finish + 1;
