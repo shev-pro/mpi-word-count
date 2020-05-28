@@ -32,6 +32,9 @@ int main(int argc, char *argv[]) {
 
     enum wc_error wc_status = NO_ERROR;
 
+    struct HashTable *t1 = ht_create_table(500);
+    ht_insert_str(t1, "pippo", "123");
+
 
     if (rank IS_MASTER) {
         log_debug("Master started");
@@ -51,7 +54,26 @@ int main(int argc, char *argv[]) {
         }
         send_workload_to_slaves(splitted_file_lists, numtasks);
         struct LinkedList *local_file_list = splitted_file_lists[0];
-        worker_process_files(local_file_list, rank, &wc_status);
+        struct WordFreq *local_frequency = worker_process_files(local_file_list, rank, &wc_status);
+
+        char *words_joined = 0;
+        size_t words_joined_len = 0;
+        int *frequency_arr = 0;
+        size_t frequency_arr_len = 0;
+
+        wc_status = wc_dump(local_frequency, &words_joined, &words_joined_len, &frequency_arr, &frequency_arr_len);
+
+        printf("%s\n", words_joined);
+
+        for (int i = 0; i < frequency_arr_len; i++) {
+            printf("%d \n", frequency_arr[i]);
+        }
+        printf("\n");
+        if (NO_ERROR != wc_status) {
+            log_fatal("local_frequency failed on %d with error %d", rank, wc_status);
+        }
+
+//        print_frequencies(local_frequency, true);
     }
 
     if (rank IS_SLAVE) {
@@ -73,7 +95,12 @@ int main(int argc, char *argv[]) {
             ll_add_last(local_file_list, rec_path);
         }
 
-        worker_process_files(local_file_list, rank, &wc_status);
+        struct WordFreq *local_frequency = worker_process_files(local_file_list, rank, &wc_status);
+        if (NO_ERROR != wc_status) {
+            log_fatal("local_frequency failed on %d with error %d", rank, wc_status);
+        }
+
+//        print_frequencies(local_frequency, true);
     }
 
 

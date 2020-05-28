@@ -112,12 +112,33 @@ void print_frequencies(struct WordFreq *frequncies, bool only_total) {
     log_debug("Total words: %li", words);
 }
 
-//enum wc_error dump(struct WordFreq *frequncies, char *serialized, long *size) {
-//    struct LinkedList *word_list = frequncies->word_list;
-//    struct HashTable *word_freq = frequncies->word_frequencies;
-//
-//
-//}
+enum wc_error
+wc_dump(struct WordFreq *frequencies, char **words_joined, size_t *words_joined_len, int **frequency_array,
+        size_t *frequency_arr_len) {
+    struct LinkedList *word_list = frequencies->word_list;
+    struct HashTable *word_freq = frequencies->word_frequencies;
+
+    *frequency_arr_len = ll_size(word_list);
+    int *local_frequency_array = calloc(*frequency_arr_len, sizeof(int *));
+
+    struct Node *current = ll_next(word_list, NULL);
+    int freq_pos = 0;
+    while (NULL != current) {
+        void *frequency_val = ht_lookup_str(word_freq, current->data);
+        if (frequency_val == NULL) {
+            log_error("Key not found %s hash map error?", current->data);
+            continue;
+        }
+        local_frequency_array[freq_pos++] = *(int *) frequency_val;
+        printf("%d\n", local_frequency_array[freq_pos - 1]);
+        current = ll_next(word_list, current);
+    }
+
+    *frequency_array = local_frequency_array;
+
+    *words_joined = ll_join(word_list, '|', words_joined_len);
+    return NO_ERROR;
+}
 
 struct WordFreq *word_frequencies(struct WordFreq *update_freq, const char *filepath, enum wc_error *status) {
     log_debug("word_frequencies [filepath=%s]", filepath);
@@ -132,7 +153,7 @@ struct WordFreq *word_frequencies(struct WordFreq *update_freq, const char *file
 
     if (NULL == update_freq) {
         word_list = ll_construct_linked_list();
-        frequencies = ht_create_table(500); //todo define this value using something better
+        frequencies = ht_create_table(500); //todo define this value using something better should be ± 20% of capacity
     } else {
         word_list = update_freq->word_list;
         frequencies = update_freq->word_frequencies;
@@ -169,7 +190,7 @@ struct WordFreq *word_frequencies(struct WordFreq *update_freq, const char *file
         }
     }
     fclose(fp);
-    if(update_freq == NULL){
+    if (update_freq == NULL) {
         update_freq = calloc(1, sizeof(struct WordFreq));
     }
     update_freq->word_list = word_list;

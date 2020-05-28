@@ -294,7 +294,6 @@ static int ll_split(struct LinkedList *list, const char *src, char delimiter) {
             int buf_size = (int) (finish - start);
             char *item = calloc(buf_size + 1, sizeof(char));
             strncpy(item, start, buf_size);
-            printf("Parsed item is %s\n", item);
             start = finish + 1;
             finish = (char *) start;
             ll_add_last(list, item);
