@@ -61,7 +61,7 @@ struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned i
     struct HashTable *file_sizes_hash_table = ht_create_table(
             (int) (ll_size(file_list) * 5)); // 5 magic number to be 20% full
     if (NULL == file_sizes_hash_table) {
-        free(splitted_files);
+//        free(splitted_files);
         *status = OOM_ERROR;
         return NULL;
     }
@@ -88,7 +88,7 @@ struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned i
                   ll_size(file_list), groups, i, ll_size(splitted_files[i]), workload_sep_size[i]);
     }
 
-    ht_free(file_sizes_hash_table);
+    ht_free(file_sizes_hash_table); //TODO fix this
     free(workload_sep_size);
     free(all_files_sizes);
 
@@ -132,7 +132,7 @@ struct WordFreq *word_frequencies(struct WordFreq *update_freq, const char *file
 
     if (NULL == update_freq) {
         word_list = ll_construct_linked_list();
-        frequencies = ht_create_table(5000); //todo define this value using something better
+        frequencies = ht_create_table(500); //todo define this value using something better
     } else {
         word_list = update_freq->word_list;
         frequencies = update_freq->word_frequencies;
@@ -155,7 +155,7 @@ struct WordFreq *word_frequencies(struct WordFreq *update_freq, const char *file
                 if (NULL == count) { // First time seeing this word
                     count = calloc(1, sizeof(int));
                     char *word = calloc(strlen(buf) + 1, sizeof(char));
-                    strncpy(word, buf, MAX_WORD_SIZE);
+                    strcpy(word, buf);
                     *count = 1;
                     ht_insert_str(frequencies, buf, count);
                     ll_add_last(word_list, word);
