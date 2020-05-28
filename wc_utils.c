@@ -75,7 +75,7 @@ struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned i
     }
     qsort(all_files_sizes, ll_size(file_list), sizeof(int), int_compare);
 
-    for (int i = ((int) ll_size(file_list) - 1); i > 0; i--) {
+    for (int i = ((int) ll_size(file_list) - 1); i >= 0; i--) {
         int min_index = find_min_index(workload_sep_size, groups);
         workload_sep_size[min_index] = workload_sep_size[min_index] + all_files_sizes[i];
         char *filename = ht_lookup(file_sizes_hash_table, all_files_sizes[i]);
