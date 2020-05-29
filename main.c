@@ -76,8 +76,8 @@ int main(int argc, char *argv[]) {
             log_fatal("local_frequency failed on %d with error %d", rank, wc_status);
         }
 
-
-//        print_frequencies(local_frequency, true);
+        pull_frequency_results(&wc_status);
+        printf("ad");
     }
 
     if (rank IS_SLAVE) {
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
 
         print_frequencies(local_frequency, true);
 
-
+        push_frequency_results(local_frequency, 0, &wc_status);
     }
 
 

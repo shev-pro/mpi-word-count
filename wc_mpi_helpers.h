@@ -28,6 +28,64 @@ static void shuffling_to_slaves(LinkedList **splitted_file_lists, int numtasks) 
     }
 }
 
+static void push_frequency_results(WordFreq *freq, int to_rank, enum wc_error *wc_status) {
+    log_info("push_frequency_results [freq.words=%d, to_rank=%d]", ll_size(freq->word_list));
 
+    WordFreqContig *dumped = wc_dump(freq, wc_status);
+    if (NO_ERROR != *wc_status) {
+        log_error("wc dump failed with code %d", *wc_status);
+    }
+    int position = 0;
+    int buffer_max_size = (int) ((dumped->frequencies_len * sizeof(int)) +    // frequency_buffer
+                                 (dumped->word_len * sizeof(char)) +          // words_buffer
+                                 sizeof(int) +                              // frequency_counter
+                                 sizeof(int) +                              // words_counter
+                                 1                                          // happy byte
+    );
+
+    printf("WordContig [freq %d word %d]\n ", (int) dumped->frequencies_len, (int) dumped->word_len);
+    printf("Buffer %d\n", buffer_max_size);
+    char *packed_buffer = malloc((size_t) buffer_max_size); // TODO free this
+
+    MPI_Pack(&dumped->frequencies_len, 1, MPI_INT, packed_buffer, buffer_max_size, &position,
+             MPI_COMM_WORLD);
+    MPI_Pack(&dumped->word_len, 1, MPI_INT, packed_buffer, buffer_max_size, &position,
+             MPI_COMM_WORLD);
+    MPI_Pack(dumped->words, (int) dumped->word_len, MPI_CHAR, packed_buffer, buffer_max_size, &position,
+             MPI_COMM_WORLD);
+    printf("Message start %s\n", dumped->words);
+    MPI_Pack(dumped->frequencies, (int) dumped->frequencies_len, MPI_INT, packed_buffer, buffer_max_size, &position,
+             MPI_COMM_WORLD);
+    MPI_Send(packed_buffer, position, MPI_PACKED, to_rank, RESULT_REDUCE_TAG, MPI_COMM_WORLD);
+}
+
+static void pull_frequency_results(enum wc_error *wc_status) {
+    MPI_Status status;
+    int message_size;
+    MPI_Probe(MPI_ANY_SOURCE, RESULT_REDUCE_TAG, MPI_COMM_WORLD, &status);
+    MPI_Get_count(&status, MPI_PACKED, &message_size);
+
+    char *packed_buffer = malloc((size_t) message_size);
+
+    MPI_Recv(packed_buffer, message_size, MPI_PACKED, MPI_ANY_SOURCE, RESULT_REDUCE_TAG, MPI_COMM_WORLD,
+             MPI_STATUS_IGNORE);
+    int position = 0;
+    WordFreqContig dumped;
+
+    MPI_Unpack(packed_buffer, message_size, &position, &dumped.frequencies_len, 1, MPI_INT, MPI_COMM_WORLD);
+    MPI_Unpack(packed_buffer, message_size, &position, &dumped.word_len, 1, MPI_INT, MPI_COMM_WORLD);
+
+
+    printf("Freq len %d, Word len %d\n", (int) dumped.frequencies_len, (int) dumped.word_len);
+    char *words = calloc(dumped.word_len*10, sizeof(char));
+    int *frequencies = calloc(dumped.frequencies_len*10, sizeof(int));
+
+    MPI_Unpack(packed_buffer, message_size, &position, &words, (int) dumped.word_len, MPI_CHAR,
+               MPI_COMM_WORLD);
+    MPI_Unpack(packed_buffer, message_size, &position, &frequencies, (int) dumped.frequencies_len, MPI_INT,
+               MPI_COMM_WORLD);
+
+
+}
 
 #endif //MPI_WORD_COUNT_WC_MPI_HELPERS_H

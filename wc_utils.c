@@ -131,7 +131,7 @@ WordFreqContig *wc_dump(WordFreq *frequencies, enum wc_error *status) {
             continue;
         }
         local_frequency_array[freq_pos++] = *(int *) frequency_val;
-        printf("%d\n", local_frequency_array[freq_pos - 1]);
+//        printf("%d\n", local_frequency_array[freq_pos - 1]);
         current = ll_next(word_list, current);
     }
 
