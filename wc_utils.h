@@ -14,6 +14,13 @@ struct WordFreq {
     struct HashTable *word_frequencies;
 };
 
+typedef struct WordFreqContig {
+    char *words;
+    size_t word_len;
+    int *frequencies;
+    size_t frequencies_len;
+} WordFreqContig;
+
 /**
  * Will group file_list into number of groups using ApproxLoadDec strategy with T < 3/4(T*) guarantee
  * @param file_list LinkedList of files (contains char*)
@@ -25,9 +32,7 @@ struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned i
 
 struct WordFreq *word_frequencies(struct WordFreq *update_freq, const char *filepath, enum wc_error *status);
 
-enum wc_error
-wc_dump(struct WordFreq *frequencies, char **words_joined, size_t *words_joined_len, int **frequency_array,
-        size_t *frequency_arr_len);
+WordFreqContig *wc_dump(struct WordFreq *frequencies, enum wc_error *status);
 
 void print_frequencies(struct WordFreq *frequncies, bool only_total);
 

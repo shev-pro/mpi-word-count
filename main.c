@@ -56,17 +56,14 @@ int main(int argc, char *argv[]) {
         struct LinkedList *local_file_list = splitted_file_lists[0];
         struct WordFreq *local_frequency = worker_process_files(local_file_list, rank, &wc_status);
 
-        char *words_joined = 0;
-        size_t words_joined_len = 0;
-        int *frequency_arr = 0;
-        size_t frequency_arr_len = 0;
+        WordFreqContig *dumped = wc_dump(local_frequency, &wc_status);
+        if (NO_ERROR != wc_status) {
+            log_error("wc dump failed with code %d", wc_status);
+        }
+        printf("%s\n", dumped->words);
 
-        wc_status = wc_dump(local_frequency, &words_joined, &words_joined_len, &frequency_arr, &frequency_arr_len);
-
-        printf("%s\n", words_joined);
-
-        for (int i = 0; i < frequency_arr_len; i++) {
-            printf("%d \n", frequency_arr[i]);
+        for (int i = 0; i < dumped->frequencies_len; i++) {
+            printf("%d \n", dumped->frequencies[i]);
         }
         printf("\n");
         if (NO_ERROR != wc_status) {

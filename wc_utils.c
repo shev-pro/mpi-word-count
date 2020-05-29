@@ -112,14 +112,15 @@ void print_frequencies(struct WordFreq *frequncies, bool only_total) {
     log_debug("Total words: %li", words);
 }
 
-enum wc_error
-wc_dump(struct WordFreq *frequencies, char **words_joined, size_t *words_joined_len, int **frequency_array,
-        size_t *frequency_arr_len) {
+WordFreqContig *wc_dump(struct WordFreq *frequencies, enum wc_error *status) {
     struct LinkedList *word_list = frequencies->word_list;
     struct HashTable *word_freq = frequencies->word_frequencies;
+    *status = NO_ERROR;
 
-    *frequency_arr_len = ll_size(word_list);
-    int *local_frequency_array = calloc(*frequency_arr_len, sizeof(int *));
+    WordFreqContig *res = calloc(sizeof(WordFreqContig), 1);
+
+    res->frequencies_len = ll_size(word_list);
+    int *local_frequency_array = calloc(res->frequencies_len, sizeof(int *));
 
     struct Node *current = ll_next(word_list, NULL);
     int freq_pos = 0;
@@ -134,10 +135,10 @@ wc_dump(struct WordFreq *frequencies, char **words_joined, size_t *words_joined_
         current = ll_next(word_list, current);
     }
 
-    *frequency_array = local_frequency_array;
+    res->frequencies = local_frequency_array;
+    res->words = ll_join(word_list, '|', &res->word_len);
 
-    *words_joined = ll_join(word_list, '|', words_joined_len);
-    return NO_ERROR;
+    return res;
 }
 
 struct WordFreq *word_frequencies(struct WordFreq *update_freq, const char *filepath, enum wc_error *status) {
