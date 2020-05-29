@@ -9,41 +9,41 @@
 #include <stdlib.h>
 #include "hash_map_crc.h"
 
-struct node {
+typedef struct ht_node {
     int key;
     void *val;
-    struct node *next;
-};
+    struct ht_node *next;
+} ht_node;
 
-struct HashTable {
+typedef struct HashTable {
     int size;
-    struct node **list;
-};
+    ht_node **list;
+} HashTable;
 
-static struct HashTable *ht_create_table(int size) {
-    struct HashTable *t = (struct HashTable *) malloc(sizeof(struct HashTable));
+static HashTable *ht_create_table(int size) {
+    HashTable *t = (HashTable *) malloc(sizeof(HashTable));
     if (NULL == t)
         return NULL;
     t->size = size;
-    t->list = (struct node **) malloc(sizeof(struct node *) * size);
+    t->list = (ht_node **) malloc(sizeof(ht_node *) * size);
     int i;
     for (i = 0; i < size; i++)
         t->list[i] = NULL;
     return t;
 }
 
-static int ht_hash_code(struct HashTable *t, int key) {
+static int ht_hash_code(HashTable *t, int key) {
     if (key < 0)
         return -(key % t->size);
     return key % t->size;
 }
 
 
-static void ht_insert_int(struct HashTable *t, int key, void *val) {
+static void ht_insert_int(HashTable *t, int key, void *val) {
     int pos = ht_hash_code(t, key);
-    struct node *list = t->list[pos];
-    struct node *newNode = (struct node *) malloc(sizeof(struct node));
-    struct node *temp = list;
+    ht_node *list = t->list[pos];
+    ht_node *newNode = (ht_node *) malloc(sizeof(ht_node));
+    ht_node *temp = list;
     while (temp) {
         if (temp->key == key) {
             temp->val = val;
@@ -57,15 +57,15 @@ static void ht_insert_int(struct HashTable *t, int key, void *val) {
     t->list[pos] = newNode;
 }
 
-static void ht_insert_str(struct HashTable *t, const char *key, void *val) {
+static void ht_insert_str(HashTable *t, const char *key, void *val) {
     int int_key = hashmap_hash_int(key);
     ht_insert_int(t, int_key, val);
 }
 
-static void *ht_lookup(struct HashTable *t, int key) {
+static void *ht_lookup(HashTable *t, int key) {
     int pos = ht_hash_code(t, key);
-    struct node *list = t->list[pos];
-    struct node *temp = list;
+    ht_node *list = t->list[pos];
+    ht_node *temp = list;
     while (temp) {
         if (temp->key == key) {
             return temp->val;
@@ -75,13 +75,13 @@ static void *ht_lookup(struct HashTable *t, int key) {
     return NULL;
 }
 
-static void *ht_lookup_str(struct HashTable *t, const char *key) {
+static void *ht_lookup_str(HashTable *t, const char *key) {
     int int_key = hashmap_hash_int(key);
 //    printf("Key %d\n", int_key);
     return ht_lookup(t, int_key);
 }
 
-static void ht_free(struct HashTable *t) {
+static void ht_free(HashTable *t) {
     free(t);
 }
 

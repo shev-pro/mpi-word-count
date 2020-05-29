@@ -14,10 +14,10 @@ struct Node {
     struct Node *next, *prev;
 };
 
-struct LinkedList {
+typedef struct LinkedList {
     struct Node *root, *tail;
     size_t _size;
-};
+} LinkedList;
 
 static struct Node *ll_construct_node(void *data) {
     struct Node *temp = malloc(sizeof(struct Node));
@@ -27,8 +27,8 @@ static struct Node *ll_construct_node(void *data) {
     return temp;
 }
 
-static struct LinkedList *ll_construct_linked_list() {
-    struct LinkedList *temp = malloc(sizeof(struct LinkedList));
+static LinkedList *ll_construct_linked_list() {
+    LinkedList *temp = malloc(sizeof(LinkedList));
     if (NULL == temp)
         return NULL;
     temp->root = NULL;
@@ -40,7 +40,7 @@ static struct LinkedList *ll_construct_linked_list() {
 /*
  * Locates a Node within the LinkedList based on the index.
  */
-static struct Node *ll_find(struct LinkedList *list, unsigned int index) {
+static struct Node *ll_find(LinkedList *list, unsigned int index) {
     if (index > list->_size) {
         fprintf(stderr, "%s%d%s%d%c\n",
                 "Error: Index Out of Bounds. Index was '",
@@ -74,7 +74,7 @@ static struct Node *ll_find(struct LinkedList *list, unsigned int index) {
 /*
  * Inserts a Node at the front of the LinkedList.
  */
-static void ll_add(struct LinkedList *list, void *data) {
+static void ll_add(LinkedList *list, void *data) {
     struct Node *inserted = ll_construct_node(data);
 
     if (list->_size == 0) {
@@ -95,7 +95,7 @@ static void ll_add(struct LinkedList *list, void *data) {
  * Inserts a Node at the end of the LinkedList.
  * O(1) complexity.
  */
-static void ll_add_last(struct LinkedList *list, void *data) {
+static void ll_add_last(LinkedList *list, void *data) {
     if (list->_size == 0)
         ll_add(list, data);
     else {
@@ -110,7 +110,7 @@ static void ll_add_last(struct LinkedList *list, void *data) {
 /*
  * Inserts a Node at a given index inside the LinkedList.
  */
-static int ll_add_at(struct LinkedList *list, unsigned int index, void *data) {
+static int ll_add_at(LinkedList *list, unsigned int index, void *data) {
     if (index > list->_size) {
         fprintf(stderr, "%s%d%s%d%c\n",
                 "Error: Index Out of Bounds. Index was '",
@@ -137,7 +137,7 @@ static int ll_add_at(struct LinkedList *list, unsigned int index, void *data) {
  * Clear the LinkedList of Nodes.
  * O(1) complexity.
  */
-static void ll_clear(struct LinkedList *list) {
+static void ll_clear(LinkedList *list) {
     list->root = NULL;
     list->tail = NULL;
     list->_size = 0;
@@ -145,7 +145,7 @@ static void ll_clear(struct LinkedList *list) {
 
 // Remove's the first Node in the LinkedList.
 // O(1) complexity.
-static void ll_remove_first(struct LinkedList *list) {
+static void ll_remove_first(LinkedList *list) {
     if (list->_size > 0) {
         if (list->_size == 1)
             ll_clear(list);
@@ -159,7 +159,7 @@ static void ll_remove_first(struct LinkedList *list) {
 
 // Remove's the last Node in the LinkedList.
 // O(1) complexity.
-static void ll_remove_last(struct LinkedList *list) {
+static void ll_remove_last(LinkedList *list) {
     if (list->_size > 0) {
         if (list->_size == 1)
             ll_clear(list);
@@ -172,7 +172,7 @@ static void ll_remove_last(struct LinkedList *list) {
 }
 
 // Remove's a Node at a given index.
-static int ll_remove_at(struct LinkedList *list, unsigned int index) {
+static int ll_remove_at(LinkedList *list, unsigned int index) {
     if (index >= list->_size) {
         fprintf(stderr, "%s%d%s%d%c\n",
                 "Error: Index Out of Bounds. Index was '",
@@ -193,7 +193,7 @@ static int ll_remove_at(struct LinkedList *list, unsigned int index) {
 }
 
 // Remove's the first Node whose data matches the parameter, if it exists.
-static int ll_remove(struct LinkedList *list, void *data) {
+static int ll_remove(LinkedList *list, void *data) {
     struct Node *temp = list->root;
     while (temp != NULL) {
         if (temp->data == data) {
@@ -219,7 +219,7 @@ static int ll_remove(struct LinkedList *list, void *data) {
 
 // Prints out the LinkedList to the terminal window.
 // O(n) complexity.
-static void ll_print(struct LinkedList *list) {
+static void ll_print(LinkedList *list) {
     printf("%c", '{');
 
     struct Node *temp = list->root;
@@ -235,11 +235,11 @@ static void ll_print(struct LinkedList *list) {
 
 // Copies a given LinkedList and returns the cloned version.
 // O(n) complexity.
-static struct LinkedList *ll_clone(struct LinkedList *list) {
+static LinkedList *ll_clone(LinkedList *list) {
     if (list == NULL)
         return NULL;
 
-    struct LinkedList *copy = ll_construct_linked_list();
+    LinkedList *copy = ll_construct_linked_list();
     struct Node *root = list->root;
 
     while (root != NULL) {
@@ -250,18 +250,18 @@ static struct LinkedList *ll_clone(struct LinkedList *list) {
     return copy;
 }
 
-static struct Node *ll_next(struct LinkedList *list, struct Node *current) {
+static struct Node *ll_next(LinkedList *list, struct Node *current) {
     if (NULL == current) {
         return list->root;
     }
     return current->next;
 }
 
-static size_t ll_size(struct LinkedList *list) {
+static size_t ll_size(LinkedList *list) {
     return list->_size;
 }
 
-static char *ll_join(struct LinkedList *list, char delimiter, size_t *size) {
+static char *ll_join(LinkedList *list, char delimiter, size_t *size) {
     struct Node *current = ll_next(list, NULL);
     long overall_len = 0;
 
@@ -286,7 +286,7 @@ static char *ll_join(struct LinkedList *list, char delimiter, size_t *size) {
     return res;
 }
 
-static int ll_split(struct LinkedList *list, const char *src, char delimiter) {
+static int ll_split(LinkedList *list, const char *src, char delimiter) {
     const char *start = src;
     char *finish = (char *) start;
     while (*start != '\0') {

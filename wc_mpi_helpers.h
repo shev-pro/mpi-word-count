@@ -11,9 +11,9 @@
 #include "wc_constants.h"
 #include "log.h"
 
-static void send_workload_to_slaves(struct LinkedList **splitted_file_lists, int numtasks) {
+static void shuffling_to_slaves(LinkedList **splitted_file_lists, int numtasks) {
     for (int slave_rank = 1; slave_rank < numtasks; slave_rank++) {
-        struct LinkedList *slave_files_list = splitted_file_lists[slave_rank];
+        LinkedList *slave_files_list = splitted_file_lists[slave_rank];
         int tag = FILE_DISTR_TAG;
 
         for (int j = 0; j < ll_size(slave_files_list); j++) {
@@ -27,5 +27,7 @@ static void send_workload_to_slaves(struct LinkedList **splitted_file_lists, int
         log_debug("Master - Slave %d Sending finish message", slave_rank);
     }
 }
+
+
 
 #endif //MPI_WORD_COUNT_WC_MPI_HELPERS_H

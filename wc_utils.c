@@ -38,12 +38,12 @@ int find_min_index(const long *in_arr, int count) {
  * @param status    Overall status
  * @return          Array of LinkedLists long groups
  */
-struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned int groups, enum wc_error *status) {
+LinkedList **split_files_equally(LinkedList *file_list, unsigned int groups, enum wc_error *status) {
     log_debug("split_files_equally [file_list_count=%d, groups=%d] starting", ll_size(file_list), groups);
 
     long *workload_sep_size = calloc(groups, sizeof(long));
     int *all_files_sizes = calloc(ll_size(file_list), sizeof(int));
-    struct LinkedList **splitted_files = malloc(sizeof(struct LinkedList *) * groups);
+    LinkedList **splitted_files = malloc(sizeof(LinkedList *) * groups);
     if (NULL == splitted_files) {
         *status = OOM_ERROR;
         return NULL;
@@ -58,7 +58,7 @@ struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned i
 
     }
 
-    struct HashTable *file_sizes_hash_table = ht_create_table(
+    HashTable *file_sizes_hash_table = ht_create_table(
             (int) (ll_size(file_list) * 5)); // 5 magic number to be 20% full
     if (NULL == file_sizes_hash_table) {
 //        free(splitted_files);
@@ -95,9 +95,9 @@ struct LinkedList **split_files_equally(struct LinkedList *file_list, unsigned i
     return splitted_files;
 }
 
-void print_frequencies(struct WordFreq *frequncies, bool only_total) {
-    struct LinkedList *word_list = frequncies->word_list;
-    struct HashTable *word_freq = frequncies->word_frequencies;
+void print_frequencies(WordFreq *frequncies, bool only_total) {
+    LinkedList *word_list = frequncies->word_list;
+    HashTable *word_freq = frequncies->word_frequencies;
 
     struct Node *current = ll_next(word_list, NULL);
     long words = 0;
@@ -112,9 +112,9 @@ void print_frequencies(struct WordFreq *frequncies, bool only_total) {
     log_debug("Total words: %li", words);
 }
 
-WordFreqContig *wc_dump(struct WordFreq *frequencies, enum wc_error *status) {
-    struct LinkedList *word_list = frequencies->word_list;
-    struct HashTable *word_freq = frequencies->word_frequencies;
+WordFreqContig *wc_dump(WordFreq *frequencies, enum wc_error *status) {
+    LinkedList *word_list = frequencies->word_list;
+    HashTable *word_freq = frequencies->word_frequencies;
     *status = NO_ERROR;
 
     WordFreqContig *res = calloc(sizeof(WordFreqContig), 1);
@@ -141,7 +141,7 @@ WordFreqContig *wc_dump(struct WordFreq *frequencies, enum wc_error *status) {
     return res;
 }
 
-struct WordFreq *word_frequencies(struct WordFreq *update_freq, const char *filepath, enum wc_error *status) {
+WordFreq *word_frequencies(WordFreq *update_freq, const char *filepath, enum wc_error *status) {
     log_debug("word_frequencies [filepath=%s]", filepath);
 
     FILE *fp = fopen(filepath, "r");
@@ -149,8 +149,8 @@ struct WordFreq *word_frequencies(struct WordFreq *update_freq, const char *file
         *status = IO_ERROR;
         return NULL;
     }
-    struct LinkedList *word_list;
-    struct HashTable *frequencies;
+    LinkedList *word_list;
+    HashTable *frequencies;
 
     if (NULL == update_freq) {
         word_list = ll_construct_linked_list();
@@ -192,7 +192,7 @@ struct WordFreq *word_frequencies(struct WordFreq *update_freq, const char *file
     }
     fclose(fp);
     if (update_freq == NULL) {
-        update_freq = calloc(1, sizeof(struct WordFreq));
+        update_freq = calloc(1, sizeof(WordFreq));
     }
     update_freq->word_list = word_list;
     update_freq->word_frequencies = frequencies;

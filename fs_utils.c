@@ -13,12 +13,12 @@
 #include <string.h>
 #include <sys/stat.h>
 
-struct LinkedList *list_directory(const char *dir_path, enum wc_error *error) {
+LinkedList *list_directory(const char *dir_path, enum wc_error *error) {
     log_debug("list_directory %s", dir_path);
 
     DIR *d;
     struct dirent *dir;
-    struct LinkedList *file_list = NULL;
+    LinkedList *file_list = NULL;
     d = opendir(dir_path);
     if (d) {
         file_list = ll_construct_linked_list();
