@@ -35,7 +35,7 @@ LinkedList **split_files_equally(LinkedList *file_list, unsigned int groups, enu
 WordFreq *word_frequencies(WordFreq *update_freq, const char *filepath, enum wc_error *status);
 
 WordFreqContig *wc_dump(WordFreq *frequencies, enum wc_error *status);
-
+void merge_locally(WordFreq *local_frequency, WordFreqContig to_merge_freqs);
 void print_frequencies(WordFreq *frequncies, bool only_total);
 
 #endif //MPI_WORD_COUNT_WC_UTILS_H

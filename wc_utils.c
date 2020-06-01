@@ -199,3 +199,30 @@ WordFreq *word_frequencies(WordFreq *update_freq, const char *filepath, enum wc_
 
     return update_freq;
 }
+
+void merge_locally(WordFreq *local_frequency, WordFreqContig to_merge_freqs) { // todo handle errors
+    log_debug("merge_locally [local_freq_len=%d, to_merge_freq=%d]", ll_size(local_frequency->word_list),
+              to_merge_freqs.word_len);
+
+    LinkedList *to_merge_words = ll_construct_linked_list();
+    HashTable *local_hm = local_frequency->word_frequencies;
+    ll_split(to_merge_words, to_merge_freqs.words, '|');
+
+    struct Node *current = ll_next(to_merge_words, NULL);
+    int pos = 0;
+    while (NULL != current) {
+        int *local_value = (int *) ht_lookup_str(local_hm, (char *) current->data);
+        if (NULL == local_value) {
+            int *count = malloc(sizeof(int)); // must reallocate value to free all freq array nextly
+            *count = to_merge_freqs.frequencies[pos];
+            ht_insert_str(local_frequency->word_frequencies, current->data, count);
+        } else {
+            if(strcmp(current->data, "Pippo") == 0){
+                printf("Sergio local %d, remote %d\n", *local_value, to_merge_freqs.frequencies[pos]);
+            }
+            *local_value = *local_value + to_merge_freqs.frequencies[pos];
+        }
+        current = ll_next(to_merge_words, current);
+    }
+
+}

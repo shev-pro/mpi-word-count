@@ -32,8 +32,6 @@ int main(int argc, char *argv[]) {
 
     enum wc_error wc_status = NO_ERROR;
 
-    HashTable *t1 = ht_create_table(500);
-    ht_insert_str(t1, "pippo", "123");
     char path[] = "/Users/sergio/ClionProjects/mpi_word_count/test_dir";
 
 
@@ -71,13 +69,23 @@ int main(int argc, char *argv[]) {
          */
         LinkedList *local_file_list = splitted_file_lists[0];
         WordFreq *local_frequency = worker_process_files(local_file_list, rank, &wc_status);
-
         if (NO_ERROR != wc_status) {
             log_fatal("local_frequency failed on %d with error %d", rank, wc_status);
         }
 
-        pull_frequency_results(&wc_status);
-        printf("ad");
+        print_frequencies(local_frequency, false);
+        printf("MASTER =====\n");
+
+        for (int i = 1; i < numtasks; i++) {
+            WordFreqContig words_contig = pull_frequency_results(&wc_status);
+            if (NO_ERROR != wc_status) {
+                log_fatal("push_frequency_results failed with code %d", wc_status);
+            }
+
+            merge_locally(local_frequency, words_contig);
+        }
+
+        print_frequencies(local_frequency, false);
     }
 
     if (rank IS_SLAVE) {
@@ -93,10 +101,13 @@ int main(int argc, char *argv[]) {
             log_fatal("local_frequency failed on %d with error %d", rank, wc_status);
         }
 
-
-        print_frequencies(local_frequency, true);
+        print_frequencies(local_frequency, false);
+        printf("SLAVE =====\n");
 
         push_frequency_results(local_frequency, 0, &wc_status);
+        if (NO_ERROR != wc_status) {
+            log_fatal("push_frequency_results failed with code %d", wc_status);
+        }
     }
 
 
