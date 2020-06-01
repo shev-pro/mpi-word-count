@@ -14,13 +14,17 @@ static struct WordFreq *worker_process_files(LinkedList *local_file_list, int ra
 
     struct WordFreq *result = NULL;
 
-    for (int i = 0; i < ll_size(local_file_list); i++) {
-        char *path_to_count = ll_find(local_file_list, i)->data;
+    struct Node *current = ll_next(local_file_list, NULL);
+    long words = 0;
+    while (NULL != current) {
+        char *path_to_count = current->data;
+        printf("Path to scan %s\n", path_to_count);
         result = word_frequencies(result, path_to_count, wc_status);
         if (NO_ERROR != *wc_status) {
             log_error("Huston, we have an error with code %d", *wc_status);
             return NULL;
         }
+        current = ll_next(local_file_list, current);
     }
 
     log_info("worker_process_files [local_file_list=%d, rank=%d] finished", ll_size(local_file_list), rank);

@@ -74,10 +74,9 @@ LinkedList **split_files_equally(LinkedList *file_list, unsigned int groups, enu
         ht_insert_int(file_sizes_hash_table, size, (void *) filename);
     }
     qsort(all_files_sizes, ll_size(file_list), sizeof(int), int_compare);
-
     for (int i = ((int) ll_size(file_list) - 1); i >= 0; i--) {
         int min_index = find_min_index(workload_sep_size, groups);
-        workload_sep_size[min_index] = workload_sep_size[min_index] + all_files_sizes[i];
+        workload_sep_size[min_index] = workload_sep_size[min_index] + all_files_sizes[i]; //TODO same size file problem
         char *filename = ht_lookup(file_sizes_hash_table, all_files_sizes[i]);
 
         ll_add_last(splitted_files[min_index], filename);
@@ -207,7 +206,7 @@ void merge_locally(WordFreq *local_frequency, WordFreqContig to_merge_freqs) { /
     LinkedList *to_merge_words = ll_construct_linked_list();
     HashTable *local_hm = local_frequency->word_frequencies;
     ll_split(to_merge_words, to_merge_freqs.words, '|');
-
+//    ll_print(to_merge_words);
     struct Node *current = ll_next(to_merge_words, NULL);
     int pos = 0;
     while (NULL != current) {
@@ -215,14 +214,11 @@ void merge_locally(WordFreq *local_frequency, WordFreqContig to_merge_freqs) { /
         if (NULL == local_value) {
             int *count = malloc(sizeof(int)); // must reallocate value to free all freq array nextly
             *count = to_merge_freqs.frequencies[pos];
-            ht_insert_str(local_frequency->word_frequencies, current->data, count);
+            ht_insert_str(local_hm, (char *) current->data, count);
+            ll_add_last(local_frequency->word_list, (char *) current->data);
         } else {
-            if(strcmp(current->data, "Pippo") == 0){
-                printf("Sergio local %d, remote %d\n", *local_value, to_merge_freqs.frequencies[pos]);
-            }
             *local_value = *local_value + to_merge_freqs.frequencies[pos];
         }
         current = ll_next(to_merge_words, current);
     }
-
 }

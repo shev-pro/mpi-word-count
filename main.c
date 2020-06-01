@@ -101,8 +101,8 @@ int main(int argc, char *argv[]) {
             log_fatal("local_frequency failed on %d with error %d", rank, wc_status);
         }
 
-        print_frequencies(local_frequency, false);
-        printf("SLAVE =====\n");
+//        print_frequencies(local_frequency, false);
+//        printf("SLAVE =====\n");
 
         push_frequency_results(local_frequency, 0, &wc_status);
         if (NO_ERROR != wc_status) {
