@@ -22,7 +22,6 @@ int main(int argc, char *argv[]) {
     log_set_level(LOG_TRACE);
     log_info("MPi Word Count startup");
 
-
     MPI_Init(&argc, &argv);
 
     int numtasks, rank;
@@ -56,10 +55,6 @@ int main(int argc, char *argv[]) {
         }
 
         /**
-         * SPLITTING END
-         */
-
-        /**
          * SHUFFLE
          */
         shuffling_to_slaves(splitted_file_lists, numtasks);
@@ -85,7 +80,9 @@ int main(int argc, char *argv[]) {
             merge_locally(local_frequency, words_contig);
         }
 
-        print_frequencies(local_frequency, false);
+//        print_frequencies(local_frequency, false);
+
+        dump_csv("/tmp/ppp", local_frequency);
     }
 
     if (rank IS_SLAVE) {
