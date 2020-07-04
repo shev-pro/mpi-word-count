@@ -195,6 +195,8 @@ WordFreq *word_frequencies(WordFreq *update_freq, const char *filepath, enum wc_
     }
 
     update_freq->word_list = word_list;
+
+    ll_print(word_list);
     update_freq->word_frequencies = frequencies;
 
     return update_freq;

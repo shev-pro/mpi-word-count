@@ -30,6 +30,7 @@ static struct WordFreq *worker_process_files(LinkedList *local_file_list, int ra
 
     log_info("worker_process_files [local_file_list=%d, rank=%d] finished", ll_size(local_file_list), rank);
     ll_merge_sort(result->word_list);
+    ll_print(result->word_list);
     return result;
 }
 

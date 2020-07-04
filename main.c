@@ -32,7 +32,6 @@ int main(int argc, char *argv[]) {
 
     char path[] = "/Users/sergio/ClionProjects/mpi_word_count/test_dir";
 
-
     if (rank IS_MASTER) {
         log_debug("Master started");
 
@@ -91,7 +90,7 @@ int main(int argc, char *argv[]) {
         if (NO_ERROR != wc_status) {
             log_fatal("local_frequency failed on %d with error %d", rank, wc_status);
         }
-
+        print_frequencies(local_frequency, false);
         push_frequency_results(local_frequency, 0, &wc_status);
         if (NO_ERROR != wc_status) {
             log_fatal("push_frequency_results failed with code %d", wc_status);

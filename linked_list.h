@@ -351,7 +351,9 @@ static LinkedList *ll_merge(LinkedList *src_a, LinkedList *src_b) {
         char *str_a = (char *) current_a->data;
         char *str_b = (char *) current_b->data;
 
-        if (strcmp(str_a, str_b) > 0) {
+        if (strcmp(str_a, str_b) == 0) {
+            ll_add_last(res, current_a->data);
+        } else if (strcmp(str_a, str_b) > 0) {
             ll_add_last(res, current_b->data);
             ll_add_last(res, current_a->data);
         } else {
