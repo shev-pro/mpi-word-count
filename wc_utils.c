@@ -38,7 +38,7 @@ int find_min_index(const long *in_arr, int count) {
  * @param status    Overall status
  * @return          Array of LinkedLists long groups
  */
-LinkedList **split_files_equally(LinkedList *file_list, unsigned int groups, enum wc_error *status) {
+LinkedList **split_files_equally(LinkedList *file_list, unsigned int groups, unsigned int *actual_workers, enum wc_error *status) {
     log_debug("split_files_equally [file_list_count=%d, groups=%d] starting", ll_size(file_list), groups);
 
     long *workload_sep_size = calloc(groups, sizeof(long));
@@ -82,10 +82,15 @@ LinkedList **split_files_equally(LinkedList *file_list, unsigned int groups, enu
         ll_add_last(splitted_files[min_index], filename);
     }
 
+    *actual_workers = 0;
     for (int i = 0; i < groups; i++) {
         log_debug("split_files_equally [file_list_count=%d, groups=%d] group_no=%d, file_count=%d, file_size=%d",
                   ll_size(file_list), groups, i, ll_size(splitted_files[i]), workload_sep_size[i]);
+        if (ll_size(splitted_files[i]) > 0) {
+            *actual_workers=*actual_workers+1;
+        }
     }
+    log_debug("split_files_equally actual_workers %d", *actual_workers);
 
     ht_free(file_sizes_hash_table); //TODO fix this
     free(workload_sep_size);
@@ -195,8 +200,6 @@ WordFreq *word_frequencies(WordFreq *update_freq, const char *filepath, enum wc_
     }
 
     update_freq->word_list = word_list;
-
-    ll_print(word_list);
     update_freq->word_frequencies = frequencies;
 
     return update_freq;
@@ -205,7 +208,6 @@ WordFreq *word_frequencies(WordFreq *update_freq, const char *filepath, enum wc_
 void merge_locally(WordFreq *local_frequency, WordFreqContig to_merge_freqs) { // todo handle errors
     log_debug("merge_locally [local_freq_len=%d, to_merge_freq=%d]", ll_size(local_frequency->word_list),
               to_merge_freqs.word_len);
-
     LinkedList *to_merge_words = ll_construct_linked_list();
     HashTable *local_hm = local_frequency->word_frequencies;
     ll_split(to_merge_words, to_merge_freqs.words, '|');
@@ -213,17 +215,22 @@ void merge_locally(WordFreq *local_frequency, WordFreqContig to_merge_freqs) { /
     int pos = 0;
     while (NULL != current) {
         int *local_value = (int *) ht_lookup_str(local_hm, (char *) current->data);
+
         if (NULL == local_value) {
             int *count = malloc(sizeof(int)); // must reallocate value to free all freq array nextly
             *count = to_merge_freqs.frequencies[pos];
             ht_insert_str(local_hm, (char *) current->data, count);
-            ll_remove_node(to_merge_words, current, true);
 //            ll_add_last(local_frequency->word_list, (char *) current->data);
+            current = ll_next(to_merge_words, current);
         } else {
             *local_value = *local_value + to_merge_freqs.frequencies[pos];
+            struct Node *to_remove = current;
+            current = ll_next(to_merge_words, current);
+            ll_remove_node(to_merge_words, to_remove, true);
         }
-        current = ll_next(to_merge_words, current);
+        pos++;
     }
 
     local_frequency->word_list = ll_merge(local_frequency->word_list, to_merge_words);
+//    ll_print(local_frequency->word_list);
 }

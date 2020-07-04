@@ -15,14 +15,18 @@ static void shuffling_to_slaves(LinkedList **splitted_file_lists, int numtasks) 
     for (int slave_rank = 1; slave_rank < numtasks; slave_rank++) {
         LinkedList *slave_files_list = splitted_file_lists[slave_rank];
         int tag = FILE_DISTR_TAG;
-
+        bool worker_has_work = false;
         for (int j = 0; j < ll_size(slave_files_list); j++) {
+            worker_has_work = true;
             char *path = ll_find(slave_files_list, j)->data;
             log_debug("Master -> Slave %d Sending path %s", slave_rank, path);
             if (j == ll_size(slave_files_list) - 1) {
                 tag = FILE_DISTR_TAG_FINAL;
             }
             MPI_Send(path, (int) strnlen(path, PATH_MAX), MPI_CHAR, slave_rank, tag, MPI_COMM_WORLD);
+        }
+        if (worker_has_work == false) {
+            MPI_Send("no_file", (int) strnlen("no_file", PATH_MAX), MPI_CHAR, slave_rank, NO_WORK_SORRY, MPI_COMM_WORLD);
         }
         log_debug("Master - Slave %d Sending finish message", slave_rank);
     }
@@ -84,7 +88,7 @@ static WordFreqContig pull_frequency_results(enum wc_error *wc_status) {
     log_debug("pull_frequency_results [frequencies_len=%d, words_len=%d]", (int) dumped.frequencies_len,
               (int) dumped.word_len);
 
-    void *dyn_buffer_frequencies = malloc((int)dumped.frequencies_len * sizeof(int));
+    void *dyn_buffer_frequencies = malloc((int) dumped.frequencies_len * sizeof(int));
     if (NULL == dyn_buffer_frequencies) {
         *wc_status = OOM_ERROR;
         log_error("pull_frequency_results - OOM error on frequencies allocation");

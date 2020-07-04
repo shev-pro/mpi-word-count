@@ -218,21 +218,6 @@ static int ll_remove(LinkedList *list, void *data) {
     return 1;
 }
 
-static void ll_remove_node(LinkedList *list, struct Node *node, bool free_mem) {
-    if (list->root == node) {
-        list->root = node->next;
-    } else if (list->tail == node) {
-        list->tail = node->prev;
-    } else {
-        node->prev->next = node->next;
-        node->next->prev = node->prev;
-    }
-    if (free_mem) {
-        free(node->data);
-    }
-    free(node);
-}
-
 // Prints out the LinkedList to the terminal window.
 // O(n) complexity.
 static void ll_print(LinkedList *list) {
@@ -248,6 +233,33 @@ static void ll_print(LinkedList *list) {
 
     printf(" }\n");
 }
+
+static void ll_remove_node(LinkedList *list, struct Node *node, bool free_mem) {
+//    printf("A\n");
+//    printf("%s\n", node->data);
+//    ll_print(list);
+    if (list->root == node && list->tail == node) {
+        list->root = NULL;
+        list->tail = NULL;
+    } else if (list->root == node) {
+        list->root = node->next;
+        list->root->prev = NULL;
+    } else if (list->tail == node) {
+        list->tail = node->prev;
+        node->prev->next = NULL;
+    } else {
+        printf("LLL\n");
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+    }
+    list->_size--;
+    if (free_mem) {
+        free(node->data);
+    }
+    free(node);
+//    ll_print(list);
+}
+
 
 // Copies a given LinkedList and returns the cloned version.
 // O(n) complexity.
@@ -333,6 +345,10 @@ static void ll_sort(LinkedList *list) {
  * @return
  */
 static LinkedList *ll_merge(LinkedList *src_a, LinkedList *src_b) {
+//    printf("====\n");
+//    ll_print(src_a);
+//    ll_print(src_b);
+//    printf("====\n");
     struct Node *current_a = ll_next(src_a, NULL);
     struct Node *current_b = ll_next(src_b, NULL);
     LinkedList *res = ll_construct_linked_list();
@@ -355,13 +371,11 @@ static LinkedList *ll_merge(LinkedList *src_a, LinkedList *src_b) {
             ll_add_last(res, current_a->data);
         } else if (strcmp(str_a, str_b) > 0) {
             ll_add_last(res, current_b->data);
-            ll_add_last(res, current_a->data);
+            current_b = ll_next(src_b, current_b);
         } else {
             ll_add_last(res, current_a->data);
-            ll_add_last(res, current_b->data);
+            current_a = ll_next(src_a, current_a);
         }
-        current_a = ll_next(src_a, current_a);
-        current_b = ll_next(src_b, current_b);
     }
     return res;
 }

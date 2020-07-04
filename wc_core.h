@@ -19,7 +19,6 @@ static struct WordFreq *worker_process_files(LinkedList *local_file_list, int ra
     long words = 0;
     while (NULL != current) {
         char *path_to_count = current->data;
-        printf("Path to scan %s\n", path_to_count);
         result = word_frequencies(result, path_to_count, wc_status);
         if (NO_ERROR != *wc_status) {
             log_error("Huston, we have an error with code %d", *wc_status);
@@ -30,7 +29,6 @@ static struct WordFreq *worker_process_files(LinkedList *local_file_list, int ra
 
     log_info("worker_process_files [local_file_list=%d, rank=%d] finished", ll_size(local_file_list), rank);
     ll_merge_sort(result->word_list);
-    ll_print(result->word_list);
     return result;
 }
 
@@ -47,6 +45,11 @@ static LinkedList *fetch_work_from_master(enum wc_error *wc_status) {
 
         if (status.MPI_TAG == FILE_DISTR_TAG_FINAL) {
             finished = true;
+        }
+        if (status.MPI_TAG == NO_WORK_SORRY) {
+            *wc_status = USELESS_ERROR;
+            log_info("Received USELESS_TAG, so this woker will not perform any processing");
+            return NULL;
         }
         int received_path_len = (int) (strnlen(buf_path, PATH_MAX) + 1);
         char *rec_path = calloc((size_t) received_path_len, sizeof(char));

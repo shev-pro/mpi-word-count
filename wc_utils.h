@@ -30,7 +30,7 @@ typedef struct WordFreqContig {
  * @param status    Overall status
  * @return          Array of LinkedLists long groups
  */
-LinkedList **split_files_equally(LinkedList *file_list, unsigned int groups, enum wc_error *status);
+LinkedList **split_files_equally(LinkedList *file_list, unsigned int groups, unsigned int *actual_workers, enum wc_error *status);
 
 WordFreq *word_frequencies(WordFreq *update_freq, const char *filepath, enum wc_error *status);
 

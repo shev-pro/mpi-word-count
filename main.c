@@ -24,9 +24,9 @@ int main(int argc, char *argv[]) {
 
     MPI_Init(&argc, &argv);
 
-    int numtasks;
+    int workers;
 
-    MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
+    MPI_Comm_size(MPI_COMM_WORLD, &workers);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     enum wc_error wc_status = NO_ERROR;
@@ -46,8 +46,8 @@ int main(int argc, char *argv[]) {
         }
         log_debug("found files %d", ll_size(files));
 
-
-        LinkedList **splitted_file_lists = split_files_equally(files, numtasks, &wc_status);
+        unsigned int actual_workers = 0;
+        LinkedList **splitted_file_lists = split_files_equally(files, workers, &actual_workers, &wc_status);
         if (NO_ERROR != wc_status) {
             log_fatal("filelist splitting failed error_code=%d", wc_status);
             return -2;
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
         /**
          * SHUFFLE
          */
-        shuffling_to_slaves(splitted_file_lists, numtasks);
+        shuffling_to_slaves(splitted_file_lists, workers);
 
         /** PROCESSING ON MASTER
          */
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
             log_fatal("local_frequency failed on %d with error %d", rank, wc_status);
         }
 //        print_frequencies(local_frequency, false);
-        for (int i = 1; i < numtasks; i++) {
+        for (int i = 1; i < actual_workers; i++) {
             WordFreqContig words_contig = pull_frequency_results(&wc_status);
             if (NO_ERROR != wc_status) {
                 log_fatal("push_frequency_results failed with code %d", wc_status);
@@ -84,20 +84,22 @@ int main(int argc, char *argv[]) {
         LinkedList *local_file_list = fetch_work_from_master(&wc_status);
         if (NO_ERROR != wc_status) {
             log_fatal("fetch_work_from_master failed on %d with error %d", rank, wc_status);
+            goto finalize;
         }
 
         WordFreq *local_frequency = worker_process_files(local_file_list, rank, &wc_status);
         if (NO_ERROR != wc_status) {
             log_fatal("local_frequency failed on %d with error %d", rank, wc_status);
+            goto finalize;
         }
-        print_frequencies(local_frequency, false);
+
         push_frequency_results(local_frequency, 0, &wc_status);
         if (NO_ERROR != wc_status) {
             log_fatal("push_frequency_results failed with code %d", wc_status);
+            goto finalize;
         }
     }
-
-
+    finalize:
     MPI_Finalize();
     return 0;
 }
