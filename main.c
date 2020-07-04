@@ -16,6 +16,7 @@
 #define IS_MASTER == 0
 #define IS_SLAVE > 0
 
+int rank;
 
 int main(int argc, char *argv[]) {
     log_set_level(LOG_TRACE);
@@ -23,7 +24,7 @@ int main(int argc, char *argv[]) {
 
     MPI_Init(&argc, &argv);
 
-    int numtasks, rank;
+    int numtasks;
 
     MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -64,7 +65,6 @@ int main(int argc, char *argv[]) {
         if (NO_ERROR != wc_status) {
             log_fatal("local_frequency failed on %d with error %d", rank, wc_status);
         }
-
 //        print_frequencies(local_frequency, false);
         for (int i = 1; i < numtasks; i++) {
             WordFreqContig words_contig = pull_frequency_results(&wc_status);
