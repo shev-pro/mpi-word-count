@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <memory.h>
+#include <stdbool.h>
 
 struct Node {
     void *data;
@@ -217,6 +218,21 @@ static int ll_remove(LinkedList *list, void *data) {
     return 1;
 }
 
+static void ll_remove_node(LinkedList *list, struct Node *node, bool free_mem) {
+    if (list->root == node) {
+        list->root = node->next;
+    } else if (list->tail == node) {
+        list->tail = node->prev;
+    } else {
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+    }
+    if (free_mem) {
+        free(node->data);
+    }
+    free(node);
+}
+
 // Prints out the LinkedList to the terminal window.
 // O(n) complexity.
 static void ll_print(LinkedList *list) {
@@ -303,6 +319,126 @@ static int ll_split(LinkedList *list, const char *src, char delimiter) {
     }
 
     return (int) ll_size(list);
+}
+
+static void ll_sort(LinkedList *list) {
+
+}
+
+/**
+ * This merge uses lexicographic order, only if both lists are just sorted and lists contains strings
+ * !! Data is not copied !!
+ * @param src_a
+ * @param src_b
+ * @return
+ */
+static LinkedList *ll_merge(LinkedList *src_a, LinkedList *src_b) {
+    struct Node *current_a = ll_next(src_a, NULL);
+    struct Node *current_b = ll_next(src_b, NULL);
+    LinkedList *res = ll_construct_linked_list();
+    while (NULL != current_a || NULL != current_b) {
+        if (NULL == current_a) {
+            ll_add_last(res, current_b->data);
+            current_b = ll_next(src_b, current_b);
+            continue;
+        }
+        if (NULL == current_b) {
+            ll_add_last(res, current_a->data);
+            current_a = ll_next(src_a, current_a);
+            continue;
+        }
+
+        char *str_a = (char *) current_a->data;
+        char *str_b = (char *) current_b->data;
+
+        if (strcmp(str_a, str_b) > 0) {
+            ll_add_last(res, current_b->data);
+            ll_add_last(res, current_a->data);
+        } else {
+            ll_add_last(res, current_a->data);
+            ll_add_last(res, current_b->data);
+        }
+        current_a = ll_next(src_a, current_a);
+        current_b = ll_next(src_b, current_b);
+    }
+    return res;
+}
+
+
+static struct Node *sorted_merge(struct Node *a, struct Node *b) {
+    struct Node *result = NULL;
+
+    if (a == NULL)
+        return (b);
+    else if (b == NULL)
+        return (a);
+
+    if (strcmp((char *) a->data, (char *) b->data) < 0) {
+        result = a;
+        result->next = sorted_merge(a->next, b);
+    } else {
+        result = b;
+        result->next = sorted_merge(a, b->next);
+    }
+
+    return (result);
+}
+
+static void fb_split(struct Node *source, struct Node **frontRef, struct Node **backRef) {
+    struct Node *fast;
+    struct Node *slow;
+    slow = source;
+
+    fast = source->next;
+
+    while (fast != NULL) {
+        fast = fast->next;
+        if (fast != NULL) {
+            slow = slow->next;
+            fast = fast->next;
+        }
+    }
+
+    *frontRef = source;
+    *backRef = slow->next;
+    slow->next = NULL;
+}
+
+static void ll_MergeSort(struct Node **headRef) {
+    struct Node *head = *headRef;
+    struct Node *a;
+    struct Node *b;
+
+    if ((head == NULL) || (head->next == NULL)) {
+        return;
+    }
+
+    fb_split(head, &a, &b);
+
+    ll_MergeSort(&a);
+    ll_MergeSort(&b);
+
+    *headRef = sorted_merge(a, b);
+}
+
+/**
+ * Performs merge sort of list data in O(n log n) sorting + O(n) normalization
+ * @param list
+ */
+static void ll_merge_sort(LinkedList *list) {
+    struct Node *root = list->root;
+    // O(n log n)
+    ll_MergeSort(&root);
+    list->root = root;
+
+    // normalization O(n)
+    struct Node *current = ll_next(list, NULL);
+    struct Node *prev = NULL;
+    while (NULL != current) {
+        current->prev = prev;
+        prev = current;
+        current = ll_next(list, current);
+    }
 }
 
 #endif //MPI_WORD_COUNT_LINKED_LIST_H

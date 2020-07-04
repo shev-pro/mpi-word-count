@@ -56,13 +56,13 @@ enum wc_error dump_csv(char *file_path, const WordFreq *frequncies) {
         return IO_ERROR;
     }
     fprintf(fp, "%s,%s\n", "word", "frequency");
-//    LinkedList *words = frequncies->word_list;
-//    HashTable *freq = frequncies->word_frequencies;
-//    struct Node *current = ll_next(words, NULL);
-//    while (current != NULL) {
-//        fprintf(fp, "%s,%d\n", (char *) current->data, *(int *) ht_lookup_str(freq, (char *) current->data));
-//        current = ll_next(words, current);
-//    }
+    LinkedList *words = frequncies->word_list;
+    HashTable *freq = frequncies->word_frequencies;
+    struct Node *current = ll_next(words, NULL);
+    while (current != NULL) {
+        fprintf(fp, "%s,%d\n", (char *) current->data, *(int *) ht_lookup_str(freq, (char *) current->data));
+        current = ll_next(words, current);
+    }
     fflush(fp);
     fclose(fp);
     return NO_ERROR;

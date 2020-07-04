@@ -193,6 +193,7 @@ WordFreq *word_frequencies(WordFreq *update_freq, const char *filepath, enum wc_
     if (update_freq == NULL) {
         update_freq = calloc(1, sizeof(WordFreq));
     }
+
     update_freq->word_list = word_list;
     update_freq->word_frequencies = frequencies;
 
@@ -206,7 +207,6 @@ void merge_locally(WordFreq *local_frequency, WordFreqContig to_merge_freqs) { /
     LinkedList *to_merge_words = ll_construct_linked_list();
     HashTable *local_hm = local_frequency->word_frequencies;
     ll_split(to_merge_words, to_merge_freqs.words, '|');
-//    ll_print(to_merge_words);
     struct Node *current = ll_next(to_merge_words, NULL);
     int pos = 0;
     while (NULL != current) {
@@ -215,10 +215,13 @@ void merge_locally(WordFreq *local_frequency, WordFreqContig to_merge_freqs) { /
             int *count = malloc(sizeof(int)); // must reallocate value to free all freq array nextly
             *count = to_merge_freqs.frequencies[pos];
             ht_insert_str(local_hm, (char *) current->data, count);
-            ll_add_last(local_frequency->word_list, (char *) current->data);
+            ll_remove_node(to_merge_words, current, true);
+//            ll_add_last(local_frequency->word_list, (char *) current->data);
         } else {
             *local_value = *local_value + to_merge_freqs.frequencies[pos];
         }
         current = ll_next(to_merge_words, current);
     }
+
+    local_frequency->word_list = ll_merge(local_frequency->word_list, to_merge_words);
 }

@@ -12,7 +12,6 @@
 #include "wc_core.h"
 #include <mpi.h>
 #include <limits.h>
-#include <stdbool.h>
 
 #define IS_MASTER == 0
 #define IS_SLAVE > 0
@@ -59,8 +58,7 @@ int main(int argc, char *argv[]) {
          */
         shuffling_to_slaves(splitted_file_lists, numtasks);
 
-        /**
-         * SHUFFLE END
+        /** PROCESSING ON MASTER
          */
         LinkedList *local_file_list = splitted_file_lists[0];
         WordFreq *local_frequency = worker_process_files(local_file_list, rank, &wc_status);
@@ -68,9 +66,7 @@ int main(int argc, char *argv[]) {
             log_fatal("local_frequency failed on %d with error %d", rank, wc_status);
         }
 
-        print_frequencies(local_frequency, false);
-        printf("MASTER =====\n");
-
+//        print_frequencies(local_frequency, false);
         for (int i = 1; i < numtasks; i++) {
             WordFreqContig words_contig = pull_frequency_results(&wc_status);
             if (NO_ERROR != wc_status) {
@@ -80,9 +76,7 @@ int main(int argc, char *argv[]) {
             merge_locally(local_frequency, words_contig);
         }
 
-//        print_frequencies(local_frequency, false);
-
-        dump_csv("/tmp/ppp", local_frequency);
+        dump_csv("/Users/sergio/ClionProjects/mpi_word_count/result.csv", local_frequency);
     }
 
     if (rank IS_SLAVE) {
@@ -97,9 +91,6 @@ int main(int argc, char *argv[]) {
         if (NO_ERROR != wc_status) {
             log_fatal("local_frequency failed on %d with error %d", rank, wc_status);
         }
-
-//        print_frequencies(local_frequency, false);
-//        printf("SLAVE =====\n");
 
         push_frequency_results(local_frequency, 0, &wc_status);
         if (NO_ERROR != wc_status) {
