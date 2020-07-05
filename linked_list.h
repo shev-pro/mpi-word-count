@@ -248,7 +248,6 @@ static void ll_remove_node(LinkedList *list, struct Node *node, bool free_mem) {
         list->tail = node->prev;
         node->prev->next = NULL;
     } else {
-        printf("LLL\n");
         node->prev->next = node->next;
         node->next->prev = node->prev;
     }
@@ -299,6 +298,9 @@ static char *ll_join(LinkedList *list, char delimiter, size_t *size) {
     }
     size_t buffer_size = overall_len + ll_size(list) + 1;
     char *res = calloc(buffer_size, sizeof(char));
+    if(NULL == res){
+        return NULL;
+    }
     char *respos = res;
     current = ll_next(list, NULL);
     while (NULL != current) {

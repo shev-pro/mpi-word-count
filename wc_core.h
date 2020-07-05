@@ -20,12 +20,14 @@ static struct WordFreq *worker_process_files(LinkedList *local_file_list, int ra
     while (NULL != current) {
         char *path_to_count = current->data;
         result = word_frequencies(result, path_to_count, wc_status);
+
         if (NO_ERROR != *wc_status) {
             log_error("Huston, we have an error with code %d", *wc_status);
             return NULL;
         }
         current = ll_next(local_file_list, current);
     }
+
 
     log_info("worker_process_files [local_file_list=%d, rank=%d] finished", ll_size(local_file_list), rank);
     ll_merge_sort(result->word_list);

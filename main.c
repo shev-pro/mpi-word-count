@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
 #include "fs_utils.h"
 #include "linked_list.h"
 #include "errors.h"
@@ -11,15 +8,21 @@
 #include "wc_mpi_helpers.h"
 #include "wc_core.h"
 #include <mpi.h>
-#include <limits.h>
 
 #define IS_MASTER == 0
 #define IS_SLAVE > 0
 
-int rank;
+int rank; // Global variable needed by logger to print rank
 
 int main(int argc, char *argv[]) {
-    log_set_level(LOG_TRACE);
+    log_set_level(LOG_INFO);
+    if (argc < 3) {
+        log_error("Invocation should be ./mpi_word_count <src_directory> <result_file>");
+        return -1;
+    }
+    char *from_directory = argv[1];
+    char *to_file = argv[2];
+    log_info("Fetching data from %s, writing results to %s", from_directory, to_file);
     log_info("MPi Word Count startup");
 
     MPI_Init(&argc, &argv);
@@ -31,18 +34,16 @@ int main(int argc, char *argv[]) {
 
     enum wc_error wc_status = NO_ERROR;
 
-    char path[] = "/Users/sergio/ClionProjects/mpi_word_count/test_dir";
-
     if (rank IS_MASTER) {
         log_debug("Master started");
 
         /**
          * SPLITTING START
          */
-        LinkedList *files = list_directory(path, &wc_status);
+        LinkedList *files = list_directory(from_directory, &wc_status);
         if (NO_ERROR != wc_status) {
             log_fatal("listing directory failed error_code=%d", wc_status);
-            return -1;
+            goto finalize;
         }
         log_debug("found files %d", ll_size(files));
 
@@ -50,7 +51,7 @@ int main(int argc, char *argv[]) {
         LinkedList **splitted_file_lists = split_files_equally(files, workers, &actual_workers, &wc_status);
         if (NO_ERROR != wc_status) {
             log_fatal("filelist splitting failed error_code=%d", wc_status);
-            return -2;
+            goto finalize;
         }
 
         /**
@@ -64,18 +65,20 @@ int main(int argc, char *argv[]) {
         WordFreq *local_frequency = worker_process_files(local_file_list, rank, &wc_status);
         if (NO_ERROR != wc_status) {
             log_fatal("local_frequency failed on %d with error %d", rank, wc_status);
+            goto finalize;
         }
 //        print_frequencies(local_frequency, false);
         for (int i = 1; i < actual_workers; i++) {
             WordFreqContig words_contig = pull_frequency_results(&wc_status);
             if (NO_ERROR != wc_status) {
                 log_fatal("push_frequency_results failed with code %d", wc_status);
+                goto finalize;
             }
 
             merge_locally(local_frequency, words_contig);
         }
 
-        dump_csv("/Users/sergio/ClionProjects/mpi_word_count/result.csv", local_frequency);
+        dump_csv(to_file, local_frequency);
     }
 
     if (rank IS_SLAVE) {
@@ -99,7 +102,9 @@ int main(int argc, char *argv[]) {
             goto finalize;
         }
     }
+
     finalize:
     MPI_Finalize();
+
     return 0;
 }

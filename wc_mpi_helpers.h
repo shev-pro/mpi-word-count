@@ -26,18 +26,20 @@ static void shuffling_to_slaves(LinkedList **splitted_file_lists, int numtasks) 
             MPI_Send(path, (int) strnlen(path, PATH_MAX), MPI_CHAR, slave_rank, tag, MPI_COMM_WORLD);
         }
         if (worker_has_work == false) {
-            MPI_Send("no_file", (int) strnlen("no_file", PATH_MAX), MPI_CHAR, slave_rank, NO_WORK_SORRY, MPI_COMM_WORLD);
+            MPI_Send("no_file", (int) strnlen("no_file", PATH_MAX), MPI_CHAR, slave_rank, NO_WORK_SORRY,
+                     MPI_COMM_WORLD);
         }
         log_debug("Master - Slave %d Sending finish message", slave_rank);
     }
 }
 
 static void push_frequency_results(WordFreq *freq, int to_rank, enum wc_error *wc_status) {
-    log_info("push_frequency_results [freq.words=%d, to_rank=%d]", ll_size(freq->word_list));
+    log_info("push_frequency_results [freq.words=%d, to_rank=%d]", ll_size(freq->word_list), to_rank);
 
     WordFreqContig *dumped = wc_dump(freq, wc_status);
     if (NO_ERROR != *wc_status) {
         log_error("wc dump failed with code %d", *wc_status);
+        return;
     }
     int position = 0;
     int buffer_max_size = (int) ((dumped->frequencies_len * sizeof(int)) +    // frequency_buffer
@@ -46,9 +48,14 @@ static void push_frequency_results(WordFreq *freq, int to_rank, enum wc_error *w
                                  sizeof(int) +                              // words_counter
                                  1                                          // happy byte
     );
-
+    log_debug("push_frequency_results [freq.words=%d, to_rank=%d] buffer_size %d", ll_size(freq->word_list), to_rank,
+              buffer_max_size);
     char *packed_buffer = malloc((size_t) buffer_max_size); // TODO free this
-
+    if (NULL == packed_buffer) {
+        *wc_status = OOM_ERROR;
+        return;
+    }
+//    printf("BUFF %s\n", dumped->words);
     MPI_Pack(&dumped->frequencies_len, 1, MPI_INT, packed_buffer, buffer_max_size, &position,
              MPI_COMM_WORLD);
     MPI_Pack(&dumped->word_len, 1, MPI_INT, packed_buffer, buffer_max_size, &position,
@@ -67,10 +74,9 @@ static WordFreqContig pull_frequency_results(enum wc_error *wc_status) {
     int message_size;
     MPI_Probe(MPI_ANY_SOURCE, RESULT_REDUCE_TAG, MPI_COMM_WORLD, &status);
     MPI_Get_count(&status, MPI_PACKED, &message_size);
-
+    log_info("pull_frequency_results - getting %d bytes message", message_size);
     WordFreqContig dumped;
     char *packed_buffer = malloc((size_t) message_size);
-
     if (NULL == packed_buffer) {
         *wc_status = OOM_ERROR;
         log_error("pull_frequency_results - OOM error on packed_buffer allocation");

@@ -38,7 +38,8 @@ int find_min_index(const long *in_arr, int count) {
  * @param status    Overall status
  * @return          Array of LinkedLists long groups
  */
-LinkedList **split_files_equally(LinkedList *file_list, unsigned int groups, unsigned int *actual_workers, enum wc_error *status) {
+LinkedList **
+split_files_equally(LinkedList *file_list, unsigned int groups, unsigned int *actual_workers, enum wc_error *status) {
     log_debug("split_files_equally [file_list_count=%d, groups=%d] starting", ll_size(file_list), groups);
 
     long *workload_sep_size = calloc(groups, sizeof(long));
@@ -87,7 +88,7 @@ LinkedList **split_files_equally(LinkedList *file_list, unsigned int groups, uns
         log_debug("split_files_equally [file_list_count=%d, groups=%d] group_no=%d, file_count=%d, file_size=%d",
                   ll_size(file_list), groups, i, ll_size(splitted_files[i]), workload_sep_size[i]);
         if (ll_size(splitted_files[i]) > 0) {
-            *actual_workers=*actual_workers+1;
+            *actual_workers = *actual_workers + 1;
         }
     }
     log_debug("split_files_equally actual_workers %d", *actual_workers);
@@ -125,6 +126,10 @@ WordFreqContig *wc_dump(WordFreq *frequencies, enum wc_error *status) {
 
     res->frequencies_len = ll_size(word_list);
     int *local_frequency_array = calloc(res->frequencies_len, sizeof(int *));
+    if (NULL == local_frequency_array) {
+        *status = OOM_ERROR;
+        return NULL;
+    }
 
     struct Node *current = ll_next(word_list, NULL);
     int freq_pos = 0;
@@ -141,6 +146,10 @@ WordFreqContig *wc_dump(WordFreq *frequencies, enum wc_error *status) {
 
     res->frequencies = local_frequency_array;
     res->words = ll_join(word_list, '|', &res->word_len);
+    if (NULL == res->words) {
+        log_error("Words is null, OOM Error?");
+        *status = GENERIC_ERROR;
+    }
 
     return res;
 }
@@ -181,6 +190,10 @@ WordFreq *word_frequencies(WordFreq *update_freq, const char *filepath, enum wc_
                 if (NULL == count) { // First time seeing this word
                     count = calloc(1, sizeof(int));
                     char *word = calloc(strlen(buf) + 1, sizeof(char));
+                    if (NULL == word) {
+                        *status = OOM_ERROR;
+                        return NULL;
+                    }
                     strcpy(word, buf);
                     *count = 1;
                     ht_insert_str(frequencies, buf, count);
@@ -201,7 +214,6 @@ WordFreq *word_frequencies(WordFreq *update_freq, const char *filepath, enum wc_
 
     update_freq->word_list = word_list;
     update_freq->word_frequencies = frequencies;
-
     return update_freq;
 }
 
