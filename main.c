@@ -20,6 +20,7 @@ int main(int argc, char *argv[]) {
         log_error("Invocation should be ./mpi_word_count <src_directory> <result_file>");
         return -1;
     }
+
     char *from_directory = argv[1];
     char *to_file = argv[2];
     log_info("Fetching data from %s, writing results to %s", from_directory, to_file);

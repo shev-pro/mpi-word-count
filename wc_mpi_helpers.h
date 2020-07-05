@@ -42,15 +42,15 @@ static void push_frequency_results(WordFreq *freq, int to_rank, enum wc_error *w
         return;
     }
     int position = 0;
-    int buffer_max_size = (int) ((dumped->frequencies_len * sizeof(int)) +    // frequency_buffer
-                                 (dumped->word_len * sizeof(char)) +          // words_buffer
-                                 sizeof(int) +                              // frequency_counter
-                                 sizeof(int) +                              // words_counter
-                                 1                                          // happy byte
+    int buffer_max_size = (int) ((dumped->frequencies_len * sizeof(int)) +      // frequency_buffer
+                                 (dumped->word_len * sizeof(char)) +            // words_buffer
+                                 sizeof(int) +                                  // frequency_counter
+                                 sizeof(int) +                                  // words_counter
+                                 1                                              // happy byte
     );
     log_debug("push_frequency_results [freq.words=%d, to_rank=%d] buffer_size %d", ll_size(freq->word_list), to_rank,
               buffer_max_size);
-    char *packed_buffer = malloc((size_t) buffer_max_size); // TODO free this
+    char *packed_buffer = malloc((size_t) buffer_max_size);
     if (NULL == packed_buffer) {
         *wc_status = OOM_ERROR;
         return;
