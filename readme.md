@@ -149,6 +149,9 @@ of loss for communication stuff, comparing to 50% of t1.
 |t4|100|79.956|78.071|68.815|
 |t8|100|82.476|81.390|77.800|
 
+![Strong scalability](https://github.com/shevchenko-sergio/mpi-word-count/raw/master/docs/strong_scalability.png "Strong scalability")
+
+
 ### Weak scalability
 
 In weak scalability, the workload for each processor remains constant, other processors are used to solve even bigger problem.
@@ -161,6 +164,8 @@ t1|**100**|133.242|250.523|400.858
 t2|100|**142.929**|270.441|470.509
 t4|100|159.913|**312.284**|550.523
 t8|100|164.951|325.560|**622.402**
+
+![Strong scalability](https://github.com/shevchenko-sergio/mpi-word-count/raw/master/docs/weak_scalability.png "Strong scalability")
 
 
 ## Datasets
