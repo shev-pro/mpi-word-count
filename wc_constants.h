@@ -7,6 +7,7 @@
 
 #define POSIX_MAX_FILE_NAME 256 // Actually 255 but lets consider final \0
 #define POSIX_MAX_PATH_LEN 4096
+#define WF_HT_SIZE 25000
 #define FILE_DISTR_TAG 1
 #define FILE_DISTR_TAG_FINAL 2
 #define RESULT_REDUCE_TAG 3

@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
         /**
          * SHUFFLE
          */
-        shuffling_to_slaves(splitted_file_lists, workers);
+        push_work_to_workers(splitted_file_lists, workers);
 
         /** PROCESSING ON MASTER
          */

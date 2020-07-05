@@ -167,7 +167,7 @@ WordFreq *word_frequencies(WordFreq *update_freq, const char *filepath, enum wc_
 
     if (NULL == update_freq) {
         word_list = ll_construct_linked_list();
-        frequencies = ht_create_table(500); //todo define this value using something better should be ± 20% of capacity
+        frequencies = ht_create_table(WF_HT_SIZE);
     } else {
         word_list = update_freq->word_list;
         frequencies = update_freq->word_frequencies;

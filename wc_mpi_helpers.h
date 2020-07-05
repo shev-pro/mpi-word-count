@@ -11,7 +11,7 @@
 #include "wc_constants.h"
 #include "log.h"
 
-static void shuffling_to_slaves(LinkedList **splitted_file_lists, int numtasks) {
+static void push_work_to_workers(LinkedList **splitted_file_lists, int numtasks) {
     for (int slave_rank = 1; slave_rank < numtasks; slave_rank++) {
         LinkedList *slave_files_list = splitted_file_lists[slave_rank];
         int tag = FILE_DISTR_TAG;
