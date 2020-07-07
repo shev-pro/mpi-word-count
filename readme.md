@@ -1,23 +1,33 @@
 # Homework solution
 
-MPI_word_count (MWC nextly) is a solution for homework problem of counting word frequencies in a set of files using MPI. 
+MPI_word_count (MWC nextly) is a solution for homework problem of counting word frequencies in a set of files using MPI and Ansi C. 
 
 ## Build and run
-This project is compiled using cmake, use ``./build_release.sh`` or ``./build_debug.sh`` for compilation. For debug reasons, it is possible
-enabling detailed logger calling `log_set_level(LOG_DEBUG);`
+Project can be compiled with any compiler (gcc or llvm) of your choise, due a complex structure was used cmake, ``./build_release.sh`` and ``./build_debug.sh`` contain everything needed for compilation in debug or release mode.
 
-Run program using mpirun like so:
-`$ mpirun -np 8 ./mpi_word_count <files_dir> <result_file>`
+Also, for debug reasons, it is possible enable detailed logger calling `log_set_level(LOG_DEBUG);` in main.c file, by default it is configured to be in INFO mode.
+
+Once compiled, run program using mpirun like so:
+`$ mpirun -np <worker_number> ./mpi_word_count <files_dir> <result_file>`
+
+where 
+
+* `worker_number` is number of processes to launch, >= 1
+* `files_dir` directory containing all files to count (with trailing /). This directory must be present on each worker
+* `result_file` resulting CSV with frequencies, will be created only on master
+
 
 ## High level solution description
 
-MWC uses MPI for message passing, so in project we have two roles - master and worker. Master once received, in input, files directory
+![Sequence diagram](https://github.com/shevchenko-sergio/mpi-word-count/raw/master/docs/sequence.png "Sequence diagram")
+
+MWC uses MPI for message passing and coordination, so in project we have two roles - master and worker. Master once received, in input, files directory [01]
 performs first evaluation of the situation. Lists all files and calculates sizes. As we don't want perform intensive computing
-on master in preparing all things, master distributes workload using only file sizes a source of information about a "complexity". 
+on master while preparing all things, master distributes workload using only file sizes as a source of information about a "complexity" [02]. 
 Once all work was distributed, workers (including master)
-can start working. Each worker, reads assigned to him files and updates internal hashmap containing word:count pairs. When reading
-is done, worker sorts words using merge sort and sends result back to master process. The last one (master) receives data from workers using,
-only merging, updates his local frequency map. Once all workers has finished sending, master produces final csv with sorted results.
+can start working. Each worker, reads assigned to him files and updates internal hashmap containing word:count pairs[03-04]. When reading
+is done, worker sorts words using merge sort and sends result back to master process[05]. The last one (master) receives data from workers [06] using,
+only merging, updates his local frequency map[07]. Once all workers has finished sending, master produces final csv with sorted results[08].
 
 ### Workload division between workers
 
@@ -35,23 +45,23 @@ the solution will be the optimal one.
 
 All counting processing is gathered under ```worker_process_files``` function, which receives a list of files and returns 
 `WordFreq` structure which contains processing result. Internally, is used modified version of HashTable which stores frequencies
-and LinkedList which is used to store. HashTable when created, accepts size, this is important value, because it should be near 20% of 
+and LinkedList which is used to store words. HashTable when created, accepts size, this is important value, because it should be near 20% of 
 HT items for better performance/memory. If you know that files has high entropy (essentially a lot of different words), put in ``wc_constants.h`` 
 WF_HT_SIZE to approx count of words * 5.
 
-LinkedList contains words because HT itself is not using strings as keys (this should be very slow) but crc32 of string. By the way, LinkedList with
-words is great, when we need to sort words in lexicographic order before returning result.
+LinkedList contains words because HT itself is not using raw strings as keys (this should be very slow) but crc32. By the way, having LinkedList with
+words is great, especially when we need to sort words in a lexicographic order before returning result.
 
 ### Merging process
 
 The only one process which performs the final "merging" of results is master, this is sequential part of project, but it is incredibly fast.
-Workers, as said before, delivers to master just sorted results, so the one thing to do is to merge results, which can be done in O(n).
+Workers, as said before, delivers to master just sorted results, so the one thing to do is to merge results, which can be done in approximately O(n).
 
 ### Message passing architecture
 
 This project uses a very small subset of features available in MPI, this is caused by using very simple Map/Reduce architecture. 
 As it is possible to see in ``wc_mpi_helpers.h`` was used simple standard ``MPI_Send``. In reduce process is used `MPI_Pack/MPI_Unpack`,
-for passing complex data and ``MPI_Get_count`` with ``MPI_Probe`` for dynamic memory allocation sizes.
+for passing complex data and ``MPI_Get_count`` with ``MPI_Probe`` for dynamic memory allocation sizes. 
 
 #### Why not using master as scheduler?
 
@@ -123,11 +133,11 @@ $ shasum -a 256 result-*                                                        
 
 Weak and strong scalability was calculated using AWS cluster of 4 m4.large instances with total of a 8 vCPU.
 Was chosen 4 different datasets (see Datasets section) where each next dataset has double complexity (not only size!) of the 
-previous one. All timings were measured using linux `time`command; seconds are unit of measurement.
+previous one. All timings were measured using linux `time`command; seconds are used as unit of measurement.
 
 ### Timings
 
-|Dataset/Processe|1|2|4|8|
+|Dataset/Processes|1|2|4|8|
 |---|---|---|---|---|
 |t1|8.507|6.3846|3.3957|2.1222|
 |t2|17.51|12.2508|6.4746|3.7215|
@@ -170,16 +180,15 @@ t8|100|164.951|325.560|**622.402**
 
 ## Datasets
 
-* high_entropy_xxl_t1 = using english dictionary, first 10000 words, 1000 files each size is from 100 to 50000 words, total size 249908 kbytes (245Mb)
-* high_entropy_xxl_t2 = using english dictionary, first 20000 words, 2000 files each size is from 100 to 50000 words, total size 514500 kbytes (503Mb)
-* high_entropy_xxl_t4 = using english dictionary, first 40000 words, 4000 files each size is from 100 to 50000 words, total size 993120 kbytes (970Mb)
-* high_entropy_xxl_t8 = using english dictionary, first 80000 words, 8000 files each size is from 100 to 50000 words, total size 2014272 kbytes (2Gb)
+* high\_entropy\_xxl\_t1 = using english dictionary, first 10000 words, 1000 files each size is from 100 to 50000 words, total size 249908 kbytes (245Mb)
+* high\_entropy\_xxl\_t2 = using english dictionary, first 20000 words, 2000 files each size is from 100 to 50000 words, total size 514500 kbytes (503Mb)
+* high\_entropy\_xxl\_t4 = using english dictionary, first 40000 words, 4000 files each size is from 100 to 50000 words, total size 993120 kbytes (970Mb)
+* high\_entropy\_xxl\_t8 = using english dictionary, first 80000 words, 8000 files each size is from 100 to 50000 words, total size 2014272 kbytes (2Gb)
 
 Dataset can be generated using python script available in ```test_dir/dataset_generator.py```.
 
-## Final considerations
+## Final considerations and future improvements
 
-As mentioned in performance evaluation, achieved results are very good for real word, when we are not talking about theoretical values.
-Of course, solution have a lot of potential for improvement, like on the fly hashmap increasing, starting data delivery once completed, 
-usage of master like scheduler of processes and even better memory handling.
+As mentioned in performance evaluation, achieved results are good, but not optimal. Of course, solution have a lot of potential for improvement, like on the fly hashmap increasing, starting data delivery once completed, 
+usage of master like scheduler of processes and even better memory handling. All of these improvements 
 

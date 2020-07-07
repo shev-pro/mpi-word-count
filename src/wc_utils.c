@@ -62,7 +62,7 @@ split_files_equally(LinkedList *file_list, unsigned int groups, unsigned int *ac
     HashTable *file_sizes_hash_table = ht_create_table(
             (int) (ll_size(file_list) * 5)); // 5 magic number to be 20% full
     if (NULL == file_sizes_hash_table) {
-//        free(splitted_files);
+        free(splitted_files);
         *status = OOM_ERROR;
         return NULL;
     }
@@ -77,7 +77,7 @@ split_files_equally(LinkedList *file_list, unsigned int groups, unsigned int *ac
     qsort(all_files_sizes, ll_size(file_list), sizeof(int), int_compare);
     for (int i = ((int) ll_size(file_list) - 1); i >= 0; i--) {
         int min_index = find_min_index(workload_sep_size, groups);
-        workload_sep_size[min_index] = workload_sep_size[min_index] + all_files_sizes[i]; //TODO same size file problem
+        workload_sep_size[min_index] = workload_sep_size[min_index] + all_files_sizes[i];
         char *filename = ht_lookup(file_sizes_hash_table, all_files_sizes[i]);
 
         ll_add_last(splitted_files[min_index], filename);
@@ -93,7 +93,7 @@ split_files_equally(LinkedList *file_list, unsigned int groups, unsigned int *ac
     }
     log_debug("split_files_equally actual_workers %d", *actual_workers);
 
-    ht_free(file_sizes_hash_table); //TODO fix this
+    ht_free(file_sizes_hash_table);
     free(workload_sep_size);
     free(all_files_sizes);
 
@@ -217,7 +217,7 @@ WordFreq *word_frequencies(WordFreq *update_freq, const char *filepath, enum wc_
     return update_freq;
 }
 
-void merge_locally(WordFreq *local_frequency, WordFreqContig to_merge_freqs) { // todo handle errors
+void merge_locally(WordFreq *local_frequency, WordFreqContig to_merge_freqs) {
     log_debug("merge_locally [local_freq_len=%d, to_merge_freq=%d]", ll_size(local_frequency->word_list),
               to_merge_freqs.word_len);
     LinkedList *to_merge_words = ll_construct_linked_list();
