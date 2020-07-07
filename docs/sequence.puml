@@ -1,0 +1,22 @@
+@startuml
+autonumber "<b>[00]"
+participant Master as m
+participant Worker as w
+
+m->m : files = list_directory()
+m->m: file_groups[] = split_files_equally(files)
+
+par
+    m->m: mine_res = worker_process_files(file_groups[0])
+else
+    w->w: worker_res = worker_process_files(file_groups[i>0]) 
+end
+
+m->w: worker_res = pull_frequency_results()
+w-->m: push_frequency_results(worker_res)
+
+m->m: res = merge_locally(mine_res, worker_res)
+
+m->m: dump_csv(res)
+
+@enduml
